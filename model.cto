@@ -1,0 +1,62 @@
+namespace org.urbanstack
+
+abstract participant User identified by email {
+  o String email
+  o String name
+  o String phoneNo
+}
+
+participant Passenger extends User {
+  --> QRPass[] qrpasses
+  // --> Wallet[] money optional
+}
+
+participant TransitProvider extends User {
+  --> QRPass[] qrpasses
+  --> Location[] locations optional
+  --> MobilityAsset[] mobilityassets optional
+  // --> Wallet[] money optional
+}
+
+participant Operator extends User {
+}
+
+participant CityPlanner extends User {
+}
+
+asset MobilityAsset identified by MiD {
+  o String MiD
+  o String name
+  --> TransitProvider owner
+  --> Operator operator optional
+}
+
+asset QRPass identified by QRPassId {
+    o String QRPassId
+    --> Passenger creator
+    --> TransitProvider carrier optional
+    --> Location origin optional
+    --> Location destination optional
+}
+
+asset Location identified by LocationID {
+     o String LocationID
+     o String address
+     --> TransitProvider owner
+     --> Passenger[] incomingPassengers optional
+}
+
+abstract transaction QRTransfer {
+  o String[] logs optional   
+  --> QRPass qrpass 
+  --> MobilityAsset mobilityAsset
+}
+
+transaction QRTransferToTransit extends QRTransfer {
+}
+
+transaction QRTransferToUser extends QRTransfer {
+}
+
+transaction SetupDemo  {
+}
