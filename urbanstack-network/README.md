@@ -1,4 +1,4 @@
-# Urbanstack
+# urbanstack-network
 
 > This network tracks the manufacture of QRs from an initial BookedTrip request through to their completion by the TransitProvider. A CityPlanner is able to provide oversight throughout this whole process. 
 
