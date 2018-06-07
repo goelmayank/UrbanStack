@@ -143,3 +143,18 @@ function createTrip(tripData) {
             return tripRegistry.add(trip);
         });
 }
+
+function generateTripId(tripNum, schedule){
+    var dt = new Date(schedule)
+
+    // Date & Month needs to be in the format 01 02
+    // so add a '0' if they are single digits
+    var month = dt.getMonth()+1;
+    if((month+'').length == 1)  month = '0'+month;
+    var dayNum = dt.getDate();
+    if((dayNum+'').length == 1)  dayNum = '0'+dayNum;
+
+    // console.log(dayNum,month,dt.getFullYear())
+
+    return tripNum+'-'+month+'-'+dayNum+'-'+(dt.getFullYear()+'').substring(2,4);
+}
