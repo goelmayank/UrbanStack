@@ -108,7 +108,7 @@ transaction PrivateCar_ET extends QRTransferToUser {
 transaction bikeshare_ET extends QRTransferToUser {
 }
 
-transaction createTrip  {
+transaction CreateTrip  {
   o   String      tripNumber
   o   String      origin
   o   String      destination

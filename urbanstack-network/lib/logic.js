@@ -13,33 +13,33 @@
  */
 'use strict';
 
-/* global getAssetRegistry getpassRegistry getFactory */
+/* global getAssetRegistry getqrpassRegistry getFactory */
 
 /**
  *
- * @param {org.urbanstack.TransferToTransit} tt - model instance
+ * @param {org.urbanstack.QRTransferToTransit} tt - model instance
  * @transaction
  */
 
 async function onTransferToTransit(tt) {
     console.log('onTransferToTransit');
 
-    //update the carrier of the Pass to Transit Provider
-    if (!tt.pass.carrier) {
-        tt.pass.carrier = tt.mobilityAsset.owner;
+    //update the carrier of the QRPass to Transit Provider
+    if (!tt.qrpass.carrier) {
+        tt.qrpass.carrier = tt.mobilityAsset.owner;
     } else {
-        throw new Error('Pass is already being carried by a Transit Provider');
+        throw new Error('QRPass is already being carried by a Transit Provider');
     }
 
-    //save the Pass
-    const  = await getAssetRegistry('org.urbanstack.Pass');
-    await .update(tt.pass);
+    //save the QRPass
+    const qr = await getAssetRegistry('org.urbanstack.QRPass');
+    await qr.update(tt.qrpass);
 
-    //add the Pass to Trasit Provider Passes[]
-    if (tt.mobilityAsset.owner.passes) {
-        tt.mobilityAsset.owner.passes.push(tt.pass);
+    //add the QRPass to Trasit Provider QRPasses[]
+    if (tt.mobilityAsset.owner.qrpasses) {
+        tt.mobilityAsset.owner.qrpasses.push(tt.qrpass);
     } else {
-        tt.mobilityAsset.owner.passes = [tt.pass];
+        tt.mobilityAsset.owner.qrpasses = [tt.qrpass];
     }
 
     //save Trasit Provider
@@ -49,27 +49,27 @@ async function onTransferToTransit(tt) {
 
 /**
  *
- * @param {org.urbanstack.TransferToUser} tt - model instance
+ * @param {org.urbanstack.QRTransferToUser} tt - model instance
  * @transaction
  */
-async function TransferToUser(tt) {
-    console.log('TransferToUser');
+async function QRTransferToUser(tt) {
+    console.log('QRTransferToUser');
 
-    //update the carrier of the Pass to null
-    if (tt.pass.carrier) {
-        tt.pass.carrier = null;
+    //update the carrier of the QRPass to null
+    if (tt.qrpass.carrier) {
+        tt.qrpass.carrier = null;
     } else {
-        throw new Error('Pass is not being carried by any Transit Provider');
+        throw new Error('QRPass is not being carried by any Transit Provider');
     }
 
-    //save the Pass
-    const  = await getAssetRegistry('org.urbanstack.Pass');
-    await .update(tt.pass);
+    //save the QRPass
+    const qr = await getAssetRegistry('org.urbanstack.QRPass');
+    await qr.update(tt.qrpass);
 
-    //remove the Pass from Transit Provider Passes[]
-    tt.mobilityAsset.owner.passes = tt.mobilityAsset.owner.passes
-        .filter(function (pass) {
-            return pass.passId !== tt.pass.passId;
+    //remove the QRPass from Transit Provider QRPasses[]
+    tt.mobilityAsset.owner.qrpasses = tt.mobilityAsset.owner.qrpasses
+        .filter(function (qrpass) {
+            return qrpass.qrpassId !== tt.qrpass.qrpassId;
         });
 
     //save Transit Provider
@@ -78,17 +78,8 @@ async function TransferToUser(tt) {
 }
 
 /**
- *
- * @param {org.urbanstack.Metro_ST} tt - model instance
- * @transaction
- */
-async function Metro_ST(tt) {
-
-}
-
-/**
  * Book Trip Transaction
- * @param {org.urbanstack.BookTrip} tripData
+ * @param {org.urbanstack.CreateTrip} tripData
  * @transaction
  *
  * 1. Check for the validity of the schedule - throw error

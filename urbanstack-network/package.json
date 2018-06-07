@@ -3,7 +3,7 @@
     "composer": "^0.19.5"
   },
   "name": "urbanstack-network",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "business network for urbanstack",
   "scripts": {
     "prepublish": "mkdirp ./dist && composer archive create --sourceType dir --sourceName . -a ./dist/urbanstack-network.bna",
