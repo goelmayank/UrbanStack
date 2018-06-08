@@ -122,21 +122,12 @@ function createTrip(tripData) {
         // Set the tripNumber, tripId ...
         var tripId = generateTripId(tripData.tripNumber, tripData.schedule);
         var trip = factory.newResource(NS, 'Trip', tripId);
-        trip.aliasTripNumber = [];
 
-        // Trip asset has an instance of the concept
-        // Use the factory to create an instance of concept
-        var tentativeRoute = factory.newConcept(NS, "Route");
+        tripData.tentativeTripLegs.forEach(tripleg => {
+            trip.tentativeTripLegs.push(tripleg);
+        });
 
-        // Set the data in the concept 'tentativeRoute'
-        tentativeRoute.origin = tripData.origin;
-        tentativeRoute.destination = tripData.destination;
-        tentativeRoute.schedule = tripData.schedule;
-        tentativeRoute.routeType = tripData.routeType;
-
-        // Set the tentativeRoute attribute on the asset
-        trip.tentativeRoute = tentativeRoute;
-        trip.participantKey = tripData.participantKey;
+        trip.passengerKey = tripData.passengerKey;
 
         // Emit the event TripCreated
         var event = factory.newEvent(NS, 'TripCreated');
@@ -170,59 +161,59 @@ function generateTripId(tripNum, schedule) {
  * 
  * **/
 function BusScan(tripData) {
-    var tripRegistry = {}
-    return getAssetRegistry('org.urbanstack.cto.Trip').then(function(registry) {
-        tripRegistry = registry
-        return tripRegistry.get(tripData.tripId);
-    }).then(function(trip) {
-        if (!trip) throw new Error("Trip : " + tripData.tripId, " Not Found!!!");
+    var transitProviderRegistry = {}
+    return getParticipantRegistry('org.urbanstack.cto.TransitProvider').then(function(registry) {
+        transitProviderRegistry = registry
+        return transitProviderRegistry.get(tripData.transitProviderKey);
+    }).then(function(transitProvider) {
+        if (!transitProvider) throw new Error("Transit Provider with: " + tripData.transitProviderKey, " Not Found!!!");
+        var passengerKey;
+        var tripLegId;
+        transitProvider.KeyValue.forEach(keyValue => {
+            if (keyValue.tripId == tripData.tripId) {
+                keyValue.tripLeg.start_time = tripData.timestamp;
+                keyValue.tripLeg.MiD = tripData.MiD;
+                keyValue.tripLeg.transitProviderKey = tripData.transitProviderKey;
+                passengerKey = keyValue.tripLeg.passengerKey;
+                tripLegId = keyValue.tripLeg.tripLegId;
+            }
+        });
+
         var passengerRegistry = {}
         return getParticipantRegistry('org.urbanstack.cto.Passenger').then(function(registry) {
             passengerRegistry = registry
-            return passengerRegistry.get(tripData.participantKey);
+            return passengerRegistry.get(passengerKey);
         }).then(function(passenger) {
             if (!passenger) throw new Error("Passenger with: " + tripData.participantKey, " Not Found!!!");
-            var transitProviderRegistry = {}
-            return getParticipantRegistry('org.urbanstack.cto.TransitProvider').then(function(registry) {
-                transitProviderRegistry = registry
-                return transitProviderRegistry.get(tripData.transitProviderKey);
-            }).then(function(transitProvider) {
-                if (!transitProvider) throw new Error("Transit Provider with: " + tripData.transitProviderKey, " Not Found!!!");
 
-                //update balance
-                passenger.balance -= tripData.fare;
-                transitProvider.balance += tripData.fare;
 
-                trip.participantKey = tripData.participantKey;
-                trip.transitProviderKey = tripData.transitProviderKey;
-                trip.MiD = tripData.MiD;
+            //update balance
+            passenger.balance -= tripData.fare;
+            transitProvider.balance += tripData.fare;
 
-                // Use the factory to create an instance of concept
-                var route = factory.newConcept(NS, "Route");
-                // Set the data in the concept 'route'
-                route.origin = tripData.origin;
-                route.destination = tripData.destination;
-                route.schedule = tripData.schedule;
-                route.routeType = tripData.routeType;
-                // Set the route attribute on the asset
-                trip.route = route;
-
-                return tripRegistry.update(trip);
-
+            if (!tripLegIid) {
                 // Successful update
-                var event = getFactory().newEvent('org.urbanstack.cto', 'QRScannedOnBus');
-                event.MiD = tripData.transitProviderKey;
-                event.origin = tripData.origin;
-                event.destination = tripData.destination;
-                event.fare = tripData.fare;
+                var event = factory.newEvent('org.urbanstack.cto', 'CreateNewTripLeg');
+                event.tripId = tripData.tripId;
+                event.tripLegId = tripLegId;
+
                 emit(event);
-            }).catch(function(error) {
-                throw new Error(error);
-            });
+            } else trip.completedTripLegs.push(tripLegId);
+
+            return tripRegistry.update(trip);
+
+            // Successful update
+            var event = factory.newEvent('org.urbanstack.cto', 'QRScannedOnBus');
+            event.MiD = tripData.transitProviderKey;
+            event.origin = tripData.origin;
+            event.destination = tripData.destination;
+            event.fare = tripData.fare;
+            emit(event);
         }).catch(function(error) {
             throw new Error(error);
         });
     }).catch(function(error) {
         throw new Error(error);
     });
+
 }

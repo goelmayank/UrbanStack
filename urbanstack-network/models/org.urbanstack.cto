@@ -17,9 +17,39 @@ participant Passenger extends User {
 }
 
 participant TransitProvider extends User {
-  --> Trip[] trips
   --> MobilityAsset[] mobilityassets optional
   o Double balance
+  o KeyValue[]  tentativeTripLegs
+  o String[]  completedTripLegs 
+}
+
+concept KeyValue {
+  o String tripId
+  --> TripLeg tripLeg
+}
+
+asset TripLeg identified by TripLegId{
+  o   String  TripLegId
+  o   TravelMode  travelMode
+  o   Location  leg_origin
+  o   Location  leg_destination
+  o   DateTime  start_time optional
+  o   DateTime  end_time optional
+  o   Double  duration
+  o   Double  distance
+  o   TripLegStatus status
+  o   Double    fare
+  o   String  MiD optional
+  o   String  passengerKey
+  o   String  transitProviderKey optional
+  // --> Passenger passenger optional
+  // --> TransitProvider transitProvider optional
+}
+
+enum TripLegStatus{
+  o BOOKED
+  o STARTED
+  o ENDED
 }
 
 participant Operator extends User {
@@ -35,21 +65,12 @@ enum Ownership {
 
 asset Trip identified by tripId {
   o   String  tripId
-  o   String  passengerKey optional
-  o   String  MiD optional
-  o   String  transitProviderKey optional
-  o   Route   tentativeRoute
-  o   Route   route optional
+  o   String  passengerKey 
+  o   TripLeg[] tentativeTripLegs
+  o   TripLeg[] tripLegs optional
 }
 
-concept Route {
-  o   Location  origin       
-  o   Location  destination  
-  o   DateTime  schedule
-  o   RouteType routeType
-}
-
-enum RouteType {
+enum TravelMode {
   o   Walking
   o   TNC
   o   Auto
@@ -87,9 +108,8 @@ transaction EndTrip{
 
 transaction CreateTrip  {
   o String      tripNumber
-  o String      origin
-  o String      destination
-  o DateTime    schedule
+  o TripLeg[]   tentativeTripLegs
+  o String      passengerKey
 }
 
 event TripCreated {
@@ -98,13 +118,8 @@ event TripCreated {
 
 transaction BusScan {
   o String    tripId
-  o String    passengerKey
   o String    transitProviderKey
   o String    MiD
-  o Location  origin
-  o Location  destination
-  o DateTime  schedule
-  o Double    fare
 }
 
 event QRScannedOnBus {
@@ -112,4 +127,9 @@ event QRScannedOnBus {
   o String      MiD
   o Location    origin
   o Location    destination
+}
+
+event CreateNewTripLeg {
+  o String      tripId
+  o String      tripLegId
 }
