@@ -17,25 +17,25 @@
 
 /**
  *
- * @param {org.urbanstack.QRTransferToTransit} tt - model instance
+ * @param {org.urbanstack.StartTrip} tt - model instance
  * @transaction
  */
 
-async function onTransferToTransit(tt) {
-    console.log('onTransferToTransit');
+async function StartTrip(tt) {
+    console.log('StartTrip');
 
-    //update the carrier of the QRPass to Transit Provider
+    //update the carrier of the Trip to Transit Provider
     if (!tt.qrpass.carrier) {
         tt.qrpass.carrier = tt.mobilityAsset.owner;
     } else {
-        throw new Error('QRPass is already being carried by a Transit Provider');
+        throw new Error('Trip is already being carried by a Transit Provider');
     }
 
-    //save the QRPass
-    const qr = await getAssetRegistry('org.urbanstack.QRPass');
+    //save the Trip
+    const qr = await getAssetRegistry('org.urbanstack.Trip');
     await qr.update(tt.qrpass);
 
-    //add the QRPass to Trasit Provider QRPasses[]
+    //add the Trip to Trasit Provider QRPasses[]
     if (tt.mobilityAsset.owner.qrpasses) {
         tt.mobilityAsset.owner.qrpasses.push(tt.qrpass);
     } else {
@@ -49,32 +49,37 @@ async function onTransferToTransit(tt) {
 
 /**
  *
- * @param {org.urbanstack.QRTransferToUser} tt - model instance
+ * @param {org.urbanstack.EndTrip} tt - model instance
  * @transaction
  */
-async function QRTransferToUser(tt) {
-    console.log('QRTransferToUser');
+async function EndTrip(tt) {
+    console.log('EndTrip');
 
-    //update the carrier of the QRPass to null
+    //update the carrier of the Trip to null
     if (tt.qrpass.carrier) {
         tt.qrpass.carrier = null;
     } else {
-        throw new Error('QRPass is not being carried by any Transit Provider');
+        throw new Error('Trip is not being carried by any Transit Provider');
     }
 
-    //save the QRPass
-    const qr = await getAssetRegistry('org.urbanstack.QRPass');
+    //save the Trip
+    const qr = await getAssetRegistry('org.urbanstack.Trip');
     await qr.update(tt.qrpass);
 
-    //remove the QRPass from Transit Provider QRPasses[]
+    //remove the Trip from Transit Provider QRPasses[]
     tt.mobilityAsset.owner.qrpasses = tt.mobilityAsset.owner.qrpasses
-        .filter(function (qrpass) {
+        .filter(function(qrpass) {
             return qrpass.qrpassId !== tt.qrpass.qrpassId;
         });
 
     //save Transit Provider
     const user = await getParticipantRegistry('org.urbanstack.TransitProvider');
     await user.update(tt.mobilityAsset.owner);
+
+    // Emit the event TripCreated
+    var event = factory.newEvent(NS, 'TripCreated');
+    event.tripId = tripId;
+    emit(event);
 }
 
 /**
@@ -99,7 +104,7 @@ function createTrip(tripData) {
      */
     var timeNow = new Date().getTime();
     var schedTime = new Date(tripData.schedule).getTime();
-    if(schedTime < timeNow){
+    if (schedTime < timeNow) {
         throw new Error("Scheduled time cannot be in the past!!!");
     }
 
@@ -107,54 +112,53 @@ function createTrip(tripData) {
 
     return getAssetRegistry('org.urbanstack.Trip')
 
-        .then(function(tripRegistry){
-            // Now add the Trip - global function getFactory() called
-            var  factory = getFactory();
+    .then(function(tripRegistry) {
+        // Now add the Trip - global function getFactory() called
+        var factory = getFactory();
 
-            var  NS =  'org.urbanstack';
+        var NS = 'org.urbanstack';
 
-            // Solution to exercise - Removed hardcoded value & invoked
-            // generate the trip ID
-            // 2.1 Set the tripNumber, tripId ...
-            var  tripId = generateTripId(tripData.tripNumber,tripData.schedule);
-            var  trip = factory.newResource(NS,'Trip',tripId);
-            trip.tripNumber = tripData.tripNumber;
-            trip.aliasTripNumber = [];
+        // generate the trip ID
+        // 2.1 Set the tripNumber, tripId ...
+        var tripId = generateTripId(tripData.tripNumber, tripData.schedule);
+        var trip = factory.newResource(NS, 'Trip', tripId);
+        trip.tripNumber = tripData.tripNumber;
+        trip.aliasTripNumber = [];
 
-            // Trip asset has an instance of the concept
-            // 2.2 Use the factory to create an instance of concept
-            var route = factory.newConcept(NS,"Route");
+        // Trip asset has an instance of the concept
+        // 2.2 Use the factory to create an instance of concept
+        var route = factory.newConcept(NS, "Route");
 
-            // 2.3 Set the data in the concept 'route'
-            route.origin = tripData.origin;
-            route.destination = tripData.destination;
-            route.schedule = tripData.schedule;
+        // 2.3 Set the data in the concept 'route'
+        route.origin = tripData.origin;
+        route.destination = tripData.destination;
+        route.schedule = tripData.schedule;
 
-            // 2.4 Set the route attribute on the asset
-            trip.route = route;
+        // 2.4 Set the route attribute on the asset
+        trip.route = route;
 
 
-            // 3 Emit the event TripCreated
-            var event = factory.newEvent(NS, 'TripCreated');
-            event.tripId = tripId;
-            emit(event);
+        // 3 Emit the event TripCreated
+        var event = factory.newEvent(NS, 'TripCreated');
+        event.tripId = tripId;
+        emit(event);
 
-            // 4. Add to registry
-            return tripRegistry.add(trip);
-        });
+        // 4. Add to registry
+        return tripRegistry.add(trip);
+    });
 }
 
-function generateTripId(tripNum, schedule){
+function generateTripId(tripNum, schedule) {
     var dt = new Date(schedule)
 
     // Date & Month needs to be in the format 01 02
     // so add a '0' if they are single digits
-    var month = dt.getMonth()+1;
-    if((month+'').length == 1)  month = '0'+month;
+    var month = dt.getMonth() + 1;
+    if ((month + '').length == 1) month = '0' + month;
     var dayNum = dt.getDate();
-    if((dayNum+'').length == 1)  dayNum = '0'+dayNum;
+    if ((dayNum + '').length == 1) dayNum = '0' + dayNum;
 
     // console.log(dayNum,month,dt.getFullYear())
 
-    return tripNum+'-'+month+'-'+dayNum+'-'+(dt.getFullYear()+'').substring(2,4);
+    return tripNum + '-' + month + '-' + dayNum + '-' + (dt.getFullYear() + '').substring(2, 4);
 }

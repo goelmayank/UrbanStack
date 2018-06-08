@@ -7,12 +7,12 @@ abstract participant User identified by email {
 }
 
 participant Passenger extends User {
-  --> QRPass[] qrpasses
+  --> Trip[] trips
   // --> Wallet[] money optional
 }
 
 participant TransitProvider extends User {
-  --> QRPass[] qrpasses
+  --> Trip[] trips
   --> Location[] locations optional
   --> MobilityAsset[] mobilityassets optional
   // --> Wallet[] money optional
@@ -29,7 +29,8 @@ asset Trip identified by tripId {
   o   String            tripNumber
   o   Route             route
   o   String[]          aliasTripNumber  optional
-  --> QRPass            qrpass  optional
+  --> Passenger creator
+  --> TransitProvider carrier optional
 }
 
 concept Route {
@@ -45,13 +46,13 @@ asset MobilityAsset identified by MiD {
   --> Operator operator optional
 }
 
-asset QRPass identified by QRPassId {
-    o String QRPassId
-    --> Passenger creator
-    --> TransitProvider carrier optional
-    --> Location origin optional
-    --> Location destination optional
-}
+// asset QRPass identified by QRPassId {
+//     o String QRPassId
+//     --> Passenger creator
+//     --> TransitProvider carrier optional
+//     --> Location origin optional
+//     --> Location destination optional
+// }
 
 asset Location identified by LocationID {
      o String LocationID
@@ -60,52 +61,52 @@ asset Location identified by LocationID {
      --> Passenger[] incomingPassengers optional
 }
 
-abstract transaction QRTransfer {
-  o String[] logs optional
-  --> QRPass qrpass
+transaction StartTrip{
+    o String[] logs optional
+  --> Trip trip
   --> MobilityAsset mobilityAsset
 }
 
-transaction QRTransferToTransit extends QRTransfer {
+transaction Metro_ST extends StartTrip {
 }
 
-transaction Metro_ST extends QRTransferToTransit {
+transaction Bus_ST extends StartTrip {
 }
 
-transaction Bus_ST extends QRTransferToTransit {
+transaction TNC_ST extends StartTrip {
 }
 
-transaction TNC_ST extends QRTransferToTransit {
+transaction non_TNC_ST extends StartTrip {
 }
 
-transaction non_TNC_ST extends QRTransferToTransit {
+transaction PrivateCar_ST extends StartTrip {
 }
 
-transaction PrivateCar_ST extends QRTransferToTransit {
+transaction bikeshare_ST extends StartTrip {
 }
 
-transaction bikeshare_ST extends QRTransferToTransit {
+transaction EndTrip{
+    o String[] logs optional
+  --> Trip trip
+  --> MobilityAsset mobilityAsset
 }
 
-transaction QRTransferToUser extends QRTransfer {
+transaction Metro_ET extends EndTrip {
 }
 
-transaction Metro_ET extends QRTransferToUser {
+transaction Bus_ET extends EndTrip {
 }
 
-transaction Bus_ET extends QRTransferToUser {
+transaction TNC_ET extends EndTrip {
 }
 
-transaction TNC_ET extends QRTransferToUser {
+transaction non_TNC_ET extends EndTrip {
 }
 
-transaction non_TNC_ET extends QRTransferToUser {
+transaction PrivateCar_ET extends EndTrip {
 }
 
-transaction PrivateCar_ET extends QRTransferToUser {
-}
-
-transaction bikeshare_ET extends QRTransferToUser {
+transaction bikeshare_ET extends EndTrip {
 }
 
 transaction CreateTrip  {
