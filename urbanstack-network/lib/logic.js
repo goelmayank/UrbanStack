@@ -169,13 +169,15 @@ function BusScan(tripData) {
         if (!transitProvider) throw new Error("Transit Provider with: " + tripData.transitProviderKey, " Not Found!!!");
         var passengerKey;
         var tripLegId;
-        transitProvider.KeyValue.forEach(keyValue => {
+        var fare;
+        transitProvider.tentativeTripLegs.forEach(keyValue => {
             if (keyValue.tripId == tripData.tripId) {
                 keyValue.tripLeg.start_time = tripData.timestamp;
                 keyValue.tripLeg.MiD = tripData.MiD;
                 keyValue.tripLeg.transitProviderKey = tripData.transitProviderKey;
                 passengerKey = keyValue.tripLeg.passengerKey;
                 tripLegId = keyValue.tripLeg.tripLegId;
+                fare = keyValue.tripLeg.fare;
             }
         });
 
@@ -188,10 +190,10 @@ function BusScan(tripData) {
 
 
             //update balance
-            passenger.balance -= tripData.fare;
-            transitProvider.balance += tripData.fare;
+            passenger.balance -= fare;
+            transitProvider.balance += fare;
 
-            if (!tripLegIid) {
+            if (!tripLegId) {
                 // Successful update
                 var event = factory.newEvent('org.urbanstack.cto', 'CreateNewTripLeg');
                 event.tripId = tripData.tripId;
@@ -200,15 +202,26 @@ function BusScan(tripData) {
                 emit(event);
             } else trip.completedTripLegs.push(tripLegId);
 
-            return tripRegistry.update(trip);
+            var tripRegistry = {}
+            return getAssetRegistry('org.urbanstack.cto.Trip').then(function(registry) {
+                tripRegistry = registry
+                return tripRegistry.get(tripData.tripId);
+            }).then(function(trip) {
+                if (!trip) throw new Error("Trip with: " + tripData.tripId, " Not Found!!!");
 
-            // Successful update
-            var event = factory.newEvent('org.urbanstack.cto', 'QRScannedOnBus');
-            event.MiD = tripData.transitProviderKey;
-            event.origin = tripData.origin;
-            event.destination = tripData.destination;
-            event.fare = tripData.fare;
-            emit(event);
+                trip.completedTripLegs.push(tripLegId);
+                return tripRegistry.update(trip);
+
+                // Successful update
+                var event = factory.newEvent('org.urbanstack.cto', 'QRScannedOnBus');
+                event.MiD = tripData.transitProviderKey;
+                event.origin = tripData.origin;
+                event.destination = tripData.destination;
+                event.fare = tripData.fare;
+                emit(event);
+            }).catch(function(error) {
+                throw new Error(error);
+            });
         }).catch(function(error) {
             throw new Error(error);
         });

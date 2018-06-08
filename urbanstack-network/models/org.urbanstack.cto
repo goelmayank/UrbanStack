@@ -66,8 +66,8 @@ enum Ownership {
 asset Trip identified by tripId {
   o   String  tripId
   o   String  passengerKey 
-  o   TripLeg[] tentativeTripLegs
-  o   TripLeg[] tripLegs optional
+  o   String[] tentativeTripLegIds
+  o   String[] completedTripLegIds optional
 }
 
 enum TravelMode {
