@@ -35,16 +35,16 @@ enum Ownership {
 
 asset Trip identified by tripId {
   o   String  tripId
-  o   String  participantKey 
-  o   String  MiD
-  o   String  transitProvider optional
+  o   String  passengerKey optional
+  o   String  MiD optional
+  o   String  transitProviderKey optional
   o   Route   tentativeRoute
-  o   Route   route
+  o   Route   route optional
 }
 
 concept Route {
-  o   Location    origin       
-  o   Location    destination  
+  o   Location  origin       
+  o   Location  destination  
   o   DateTime  schedule
   o   RouteType routeType
 }

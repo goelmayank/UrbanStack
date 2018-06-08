@@ -191,7 +191,7 @@ function BusScan(tripData) {
 
                 //update balance
                 passenger.balance -= tripData.fare;
-                transitProvider.balance += transitProvider.fare;
+                transitProvider.balance += tripData.fare;
 
                 trip.participantKey = tripData.participantKey;
                 trip.transitProviderKey = tripData.transitProviderKey;
