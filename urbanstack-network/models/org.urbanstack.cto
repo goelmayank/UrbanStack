@@ -1,9 +1,14 @@
 namespace org.urbanstack
 
-abstract participant User identified by email {
+abstract participant User identified by participantKey {
+  o String          participantKey
+  o Contact         contact
+}
+
+concept Contact {
+  o String fName
+  o String lname
   o String email
-  o String name
-  o String phoneNo
 }
 
 participant Passenger extends User {
