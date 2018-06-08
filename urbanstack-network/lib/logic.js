@@ -174,6 +174,7 @@ function BusScan(tripData) {
             if (keyValue.tripId == tripData.tripId) {
                 keyValue.tripLeg.start_time = tripData.timestamp;
                 keyValue.tripLeg.MiD = tripData.MiD;
+                keyValue.tripLeg.TripLegStatus = "STARTED";
                 keyValue.tripLeg.transitProviderKey = tripData.transitProviderKey;
                 passengerKey = keyValue.tripLeg.passengerKey;
                 tripLegId = keyValue.tripLeg.tripLegId;
@@ -192,6 +193,7 @@ function BusScan(tripData) {
             //update balance
             passenger.balance -= fare;
             transitProvider.balance += fare;
+            return passengerRegistry.update(passenger);
 
             if (!tripLegId) {
                 // Successful update
@@ -225,6 +227,7 @@ function BusScan(tripData) {
         }).catch(function(error) {
             throw new Error(error);
         });
+        return transitProviderRegistry.update(transitProvider);
     }).catch(function(error) {
         throw new Error(error);
     });
