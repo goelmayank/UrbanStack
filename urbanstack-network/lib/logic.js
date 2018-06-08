@@ -87,14 +87,14 @@ async function EndTrip(tt) {
  * @param {org.urbanstack.CreateTrip} tripData
  * @transaction
  *
- * 1. Check for the validity of the schedule - throw error
- * 2. Create the Trip asset
- *    2.1 Set the tripId, tripNumber
- *    2.2 Create an instance of the 'route' Concept
- *    2.3 Set the data on 'route' Concept
- *    2.4 Set the trip asset route = 'route' concept
- * 3. Emit TripCreated Event
- * 4. Add the trip asset to the registry
+ * Check for the validity of the schedule - throw error
+ * Create the Trip asset
+ *    Set the tripId, tripNumber
+ *    Create an instance of the 'route' Concept
+ *    Set the data on 'route' Concept
+ *    Set the trip asset route = 'route' concept
+ * Emit TripCreated Event
+ * Add the trip asset to the registry
  */
 function createTrip(tripData) {
 
@@ -119,31 +119,31 @@ function createTrip(tripData) {
         var NS = 'org.urbanstack';
 
         // generate the trip ID
-        // 2.1 Set the tripNumber, tripId ...
+        // Set the tripNumber, tripId ...
         var tripId = generateTripId(tripData.tripNumber, tripData.schedule);
         var trip = factory.newResource(NS, 'Trip', tripId);
-        trip.tripNumber = tripData.tripNumber;
         trip.aliasTripNumber = [];
 
         // Trip asset has an instance of the concept
-        // 2.2 Use the factory to create an instance of concept
-        var route = factory.newConcept(NS, "Route");
+        // Use the factory to create an instance of concept
+        var tentativeRoute = factory.newConcept(NS, "Route");
 
-        // 2.3 Set the data in the concept 'route'
-        route.origin = tripData.origin;
-        route.destination = tripData.destination;
-        route.schedule = tripData.schedule;
+        // Set the data in the concept 'tentativeRoute'
+        tentativeRoute.origin = tripData.origin;
+        tentativeRoute.destination = tripData.destination;
+        tentativeRoute.schedule = tripData.schedule;
+        tentativeRoute.routeType = tripData.routeType;
 
-        // 2.4 Set the route attribute on the asset
-        trip.route = route;
+        // Set the tentativeRoute attribute on the asset
+        trip.tentativeRoute = tentativeRoute;
+        trip.participantKey = tripData.participantKey;
 
-
-        // 3 Emit the event TripCreated
+        // Emit the event TripCreated
         var event = factory.newEvent(NS, 'TripCreated');
         event.tripId = tripId;
         emit(event);
 
-        // 4. Add to registry
+        // Add to registry
         return tripRegistry.add(trip);
     });
 }
@@ -161,4 +161,68 @@ function generateTripId(tripNum, schedule) {
     // console.log(dayNum,month,dt.getFullYear())
 
     return tripNum + '-' + month + '-' + dayNum + '-' + (dt.getFullYear() + '').substring(2, 4);
+}
+
+/**
+ * Create Trip Transaction
+ * @param {org.urbanstack.BusScan} tripData
+ * @transaction
+ * 
+ * **/
+function BusScan(tripData) {
+    var tripRegistry = {}
+    return getAssetRegistry('org.urbanstack.cto.Trip').then(function(registry) {
+        tripRegistry = registry
+        return tripRegistry.get(tripData.tripId);
+    }).then(function(trip) {
+        if (!trip) throw new Error("Trip : " + tripData.tripId, " Not Found!!!");
+        var passengerRegistry = {}
+        return getParticipantRegistry('org.urbanstack.cto.Passenger').then(function(registry) {
+            passengerRegistry = registry
+            return passengerRegistry.get(tripData.participantKey);
+        }).then(function(passenger) {
+            if (!passenger) throw new Error("Passenger with: " + tripData.participantKey, " Not Found!!!");
+            var transitProviderRegistry = {}
+            return getParticipantRegistry('org.urbanstack.cto.TransitProvider').then(function(registry) {
+                transitProviderRegistry = registry
+                return transitProviderRegistry.get(tripData.transitProviderKey);
+            }).then(function(transitProvider) {
+                if (!transitProvider) throw new Error("Transit Provider with: " + tripData.transitProviderKey, " Not Found!!!");
+
+                //update balance
+                passenger.balance -= tripData.fare;
+                transitProvider.balance += transitProvider.fare;
+
+                trip.participantKey = tripData.participantKey;
+                trip.transitProviderKey = tripData.transitProviderKey;
+                trip.MiD = tripData.MiD;
+
+                // Use the factory to create an instance of concept
+                var route = factory.newConcept(NS, "Route");
+                // Set the data in the concept 'route'
+                route.origin = tripData.origin;
+                route.destination = tripData.destination;
+                route.schedule = tripData.schedule;
+                route.routeType = tripData.routeType;
+                // Set the route attribute on the asset
+                trip.route = route;
+
+                return tripRegistry.update(trip);
+
+                // Successful update
+                var event = getFactory().newEvent('org.urbanstack.cto', 'QRScannedOnBus');
+                event.MiD = tripData.transitProviderKey;
+                event.origin = tripData.origin;
+                event.destination = tripData.destination;
+                event.fare = tripData.fare;
+                emit(event);
+            }).catch(function(error) {
+                throw new Error(error);
+            });
+        }).catch(function(error) {
+            throw new Error(error);
+        });
+    }).catch(function(error) {
+        throw new Error(error);
+    });
 }

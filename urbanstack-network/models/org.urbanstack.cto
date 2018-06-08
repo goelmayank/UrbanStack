@@ -13,14 +13,13 @@ concept Contact {
 
 participant Passenger extends User {
   --> Trip[] trips
-  // --> Wallet[] money optional
+  o Double balance
 }
 
 participant TransitProvider extends User {
   --> Trip[] trips
-  --> Location[] locations optional
   --> MobilityAsset[] mobilityassets optional
-  // --> Wallet[] money optional
+  o Double balance
 }
 
 participant Operator extends User {
@@ -29,19 +28,35 @@ participant Operator extends User {
 participant CityPlanner extends User {
 }
 
+enum Ownership {
+  o   LEASED
+  o   OWNED
+}
+
 asset Trip identified by tripId {
-  o   String            tripId regex=/[A-Z][A-Z][0-9][0-9][0-9]-[0-9][0-9]-[0-3][0-9]-[0-9][0-9]/
-  o   String            tripNumber
-  o   Route             route
-  o   String[]          aliasTripNumber  optional
-  --> Passenger creator
-  --> TransitProvider carrier optional
+  o   String  tripId
+  o   String  participantKey 
+  o   String  MiD
+  o   String  transitProvider optional
+  o   Route   tentativeRoute
+  o   Route   route
 }
 
 concept Route {
-  o   String    origin       regex=/[A-Z][A-Z][A-Z]/
-  o   String    destination  regex=/[A-Z][A-Z][A-Z]/
+  o   Location    origin       
+  o   Location    destination  
   o   DateTime  schedule
+  o   RouteType routeType
+}
+
+enum RouteType {
+  o   Walking
+  o   TNC
+  o   Auto
+  o   Bus
+  o   Metro
+  o   Private
+  o   BikeShare
 }
 
 asset MobilityAsset identified by MiD {
@@ -51,76 +66,50 @@ asset MobilityAsset identified by MiD {
   --> Operator operator optional
 }
 
-// asset QRPass identified by QRPassId {
-//     o String QRPassId
-//     --> Passenger creator
-//     --> TransitProvider carrier optional
-//     --> Location origin optional
-//     --> Location destination optional
-// }
-
-asset Location identified by LocationID {
-     o String LocationID
-     o String address
-     --> TransitProvider owner
-     --> Passenger[] incomingPassengers optional
+concept Location {
+  o String name
+  o String address
+  --> Passenger[] incomingPassengers optional
+  --> Passenger[] outgoingPassengers optional
 }
 
 transaction StartTrip{
-    o String[] logs optional
+  o String[] logs optional
   --> Trip trip
   --> MobilityAsset mobilityAsset
-}
-
-transaction Metro_ST extends StartTrip {
-}
-
-transaction Bus_ST extends StartTrip {
-}
-
-transaction TNC_ST extends StartTrip {
-}
-
-transaction non_TNC_ST extends StartTrip {
-}
-
-transaction PrivateCar_ST extends StartTrip {
-}
-
-transaction bikeshare_ST extends StartTrip {
 }
 
 transaction EndTrip{
-    o String[] logs optional
+  o String[] logs optional
   --> Trip trip
   --> MobilityAsset mobilityAsset
 }
 
-transaction Metro_ET extends EndTrip {
-}
-
-transaction Bus_ET extends EndTrip {
-}
-
-transaction TNC_ET extends EndTrip {
-}
-
-transaction non_TNC_ET extends EndTrip {
-}
-
-transaction PrivateCar_ET extends EndTrip {
-}
-
-transaction bikeshare_ET extends EndTrip {
-}
-
 transaction CreateTrip  {
-  o   String      tripNumber
-  o   String      origin
-  o   String      destination
-  o   DateTime    schedule
+  o String      tripNumber
+  o String      origin
+  o String      destination
+  o DateTime    schedule
 }
 
 event FlightCreated {
-  o   String      flightId
+  o String      flightId
+}
+
+transaction BusScan {
+  o String    tripId
+  o String    passengerKey
+  o String    transitProviderKey
+  o String    MiD
+  o Location  origin
+  o Location  destination
+  o DateTime  schedule
+  o Double    fare
+}
+
+event QRScannedOnBus {
+  o String      tripId
+  o String      MiD
+  o Location    origin
+  o Location    destination
 }
