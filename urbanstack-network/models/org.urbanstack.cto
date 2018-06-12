@@ -1,76 +1,5 @@
 namespace org.urbanstack
 
-abstract participant User identified by participantKey {
-  o String          participantKey
-  o Contact         contact
-}
-
-concept Contact {
-  o String fName
-  o String lname
-  o String email
-}
-
-participant Passenger extends User {
-  --> vPassenger[] trips
-  o Double balance
-}
-
-participant TransitProvider extends User {
-  --> MobilityAsset[] mobilityassets optional
-  o Double balance
-  o KeyValue[]  tentativeTripLegs
-  o String[]  completedTripLegs 
-  o TransitMode transitMode
-  o City city
-}
-
-concept KeyValue {
-  o String vPassengerId
-  --> TripLeg tripLeg
-}
-
-asset TripLeg identified by TripLegId{
-  o   String  TripLegId
-  o   TransitMode  transitMode
-  o   Place  leg_origin
-  o   Place  leg_destination
-  o   DateTime  start_time optional
-  o   DateTime  end_time optional
-  o   Double  duration
-  o   Double  distance
-  o   TripLegStatus status
-  o   Double    fare
-  o   String  MiD optional
-  --> TransitProvider transitProvider optional
-}
-
-enum TripLegStatus{
-  o BOOKED
-  o CONFIRMED
-  o STARTED
-  o ENDED
-}
-
-participant Operator extends User {
-}
-
-participant CityPlanner extends User {
-}
-
-enum Ownership {
-  o   LEASED
-  o   OWNED
-}
-
-asset vPassenger identified by vPassengerId {
-  o   String  vPassengerId
-  o   String  CurrentTripLegId
-  o   String[] tentativeTripLegIds
-  o   String[] completedTripLegIds optional
-  --> Passenger owner
-}
-
 enum TransitMode {
   o   Walking
   o   TNC
@@ -81,11 +10,21 @@ enum TransitMode {
   o   BikeShare
 }
 
-asset MobilityAsset identified by MiD {
-  o String MiD
-  o String name
-  --> TransitProvider owner
-  --> Operator operator optional
+enum TripLegStatus{
+  o BOOKED
+  o CONFIRMED
+  o STARTED
+  o ENDED
+}
+
+enum Ownership {
+  o   LEASED
+  o   OWNED
+}
+
+concept KeyValue {
+  o String vPassengerId
+  --> TripLeg tripLeg
 }
 
 concept Place {
@@ -103,6 +42,67 @@ concept City {
   o Double lng optional
   o String[] incomingPassengerKeys optional
   o String[] outgoingPassengerKeys optional
+}
+
+concept Contact {
+  o String fName
+  o String lname
+  o String email
+}
+
+abstract participant User identified by participantKey {
+  o String          participantKey
+  o Contact         contact
+}
+
+participant Operator extends User {
+}
+
+participant CityPlanner extends User {
+}
+
+participant Passenger extends User {
+  --> vPassenger[] trips
+  o Double balance
+}
+
+participant TransitProvider extends User {
+  --> MobilityAsset[] mobilityassets optional
+  o Double balance
+  --> TripLeg[]  tentativeTripLegs
+  o String[]  completedTripLegs 
+  o TransitMode transitMode
+  o City city
+}
+
+asset TripLeg identified by TripLegId{
+  o   String  TripLegId
+  o   TransitMode  transitMode
+  o   Place  leg_origin
+  o   Place  leg_destination
+  o   DateTime  start_time optional
+  o   DateTime  end_time optional
+  o   Double  duration
+  o   Double  distance
+  o   TripLegStatus status
+  o   Double    fare
+  o   String  MiD optional
+  --> TransitProvider transitProvider optional
+}
+
+asset vPassenger identified by vPassengerId {
+  o   String  vPassengerId
+  o   String  CurrentTripLegId
+  o   String[] tentativeTripLegIds
+  o   String[] completedTripLegIds optional
+  --> Passenger owner
+}
+
+asset MobilityAsset identified by MiD {
+  o String MiD
+  o String name
+  --> TransitProvider owner
+  --> Operator operator optional
 }
 
 transaction CreateTrip  {

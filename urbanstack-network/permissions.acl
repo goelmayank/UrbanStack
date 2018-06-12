@@ -55,3 +55,21 @@ rule TransitProviderPermission {
   transaction: "org.urbanstack.CreateTrip"
   action: ALLOW
 }
+
+rule TransitProviderTripLegAccess {
+    description: "TransitProvider can update the details of a TripLeg that they own"
+    participant(d): "org.urbanstack.TransitProvider"
+    operation: UPDATE
+    resource(o): "org.urbanstack.TripLeg"
+    condition: (o.transitProvider == d)
+    action: ALLOW
+}
+
+rule OnlyPassengersCanCreateTrip {
+    description: "Passenger participant type can create Trip and TripLegs"
+    participant: "org.urbanstack.Passenger"
+    operation: CREATE
+    resource: "org.urbanstack.vPassenger"
+    transaction: "org.urbanstack.CreateTrip"
+    action: ALLOW
+}

@@ -79,12 +79,12 @@ function ConfirmTripLeg(tripData) {
  * **/
 function BusScan(tripData) {
     var transitProviderRegistry = {}
-    var passengerKey;
-    var tripLegId;
-    var fare;
     var passengerRegistry = {}
     var vPassengerRegistry = {}
 
+    var passengerKey;
+    var tripLegId;
+    var fare;
     return getParticipantRegistry('org.urbanstack.cto.TransitProvider').then(function(registry) {
         transitProviderRegistry = registry
         return transitProviderRegistry.get(tripData.transitProviderKey);
@@ -97,40 +97,21 @@ function BusScan(tripData) {
                 keyValue.tripLeg.MiD = tripData.MiD;
                 keyValue.tripLeg.TripLegStatus = "STARTED";
                 keyValue.tripLeg.transitProviderKey = tripData.transitProviderKey;
-                passengerKey = keyValue.tripLeg.passengerKey;
+                
                 tripLegId = keyValue.tripLeg.tripLegId;
                 fare = keyValue.tripLeg.fare;
             }
+        }).catch(function(error) {
+            throw new Error(error);
         });
-        transitProvider.balance += fare;
-        return transitProviderRegistry.update(transitProvider);
-    });
 
-    return getParticipantRegistry('org.urbanstack.cto.Passenger').then(function(registry) {
-        passengerRegistry = registry
-        return passengerRegistry.get(passengerKey);
-    }).then(function(passenger) {
-        if (!passenger) throw new Error("Passenger with: " + tripData.participantKey, " Not Found!!!");
-
-        //update balance
-        passenger.balance -= fare;
-        return passengerRegistry.update(passenger);
-    });
-
-
-
-    if (!tripLegId) {
-        // Successful update
-        var event = factory.newEvent('org.urbanstack.cto', 'ConfirmTripLeg');
-        event.vPassengerId = tripData.vPassengerId;
-        event.tripLegId = tripLegId;
-        emit(event);
-    } else {
+        if (!tripLegId) throw new Error("Trip Leg with: " + tripLegId, " Not Found!!!");
         return getAssetRegistry('org.urbanstack.cto.vPassenger').then(function(registry) {
             vPassengerRegistry = registry
             return vPassengerRegistry.get(tripData.vPassengerId);
         }).then(function(vPassenger) {
             if (!vPassenger) throw new Error("vPassenger with: " + tripData.vPassengerId, " Not Found!!!");
+            
             // Successful update
             var event = factory.newEvent('org.urbanstack.cto', 'QRScannedOnBus');
             event.MiD = tripData.transitProviderKey;
@@ -138,12 +119,30 @@ function BusScan(tripData) {
             event.destination = tripData.destination;
             event.fare = tripData.fare;
             emit(event);
-
+            
+            return getParticipantRegistry('org.urbanstack.cto.Passenger').then(function(registry) {
+                passengerRegistry = registry
+                return passengerRegistry.get(passengerKey);
+            }).then(function(passenger) {
+                if (!passenger) throw new Error("Passenger with: " + tripData.participantKey, " Not Found!!!");
+        
+                //update balance
+                passenger.balance -= fare;
+                return passengerRegistry.update(passenger);
+            }).catch(function(error) {
+                throw new Error(error);
+            });
+            
+            passengerKey = vPassenger.passengerKey;
             vPassenger.completedTripLegs.push(tripLegId);
             return vPassengerRegistry.update(vPassenger);
-        })
-    }
-
+        }).catch(function(error) {
+            throw new Error(error);
+        });
+        
+        transitProvider.balance += fare;
+        return transitProviderRegistry.update(transitProvider);
+    });
 }
 
 /**
