@@ -107,7 +107,7 @@ transaction EndTrip{
 }
 
 transaction CreateTrip  {
-  o String      tripNumber
+  o DateTime    start_time
   o TripLeg[]   tentativeTripLegs
   o String      passengerKey
 }

@@ -87,7 +87,7 @@ async function EndTrip(tt) {
  * @param {org.urbanstack.CreateTrip} tripData
  * @transaction
  *
- * Check for the validity of the schedule - throw error
+ * Check for the validity of the start_time - throw error
  * Create the Trip asset
  *    Set the tripId, tripNumber
  *    Create an instance of the 'route' Concept
@@ -99,13 +99,13 @@ async function EndTrip(tt) {
 function createTrip(tripData) {
 
     /**
-     * 1. Validate the schedule data
+     * 1. Validate the start_time data
      * If the date is a past date then throw an error
      */
     var timeNow = new Date().getTime();
-    var schedTime = new Date(tripData.schedule).getTime();
+    var schedTime = new Date(tripData.start_time).getTime();
     if (schedTime < timeNow) {
-        throw new Error("Scheduled time cannot be in the past!!!");
+        throw new Error("start_timed time cannot be in the past!!!");
     }
 
     // Get the Asset Registry
@@ -120,7 +120,7 @@ function createTrip(tripData) {
 
         // generate the trip ID
         // Set the tripNumber, tripId ...
-        var tripId = generateTripId(tripData.tripNumber, tripData.schedule);
+        var tripId = parseInt(Math.random() * 100000000);
         var trip = factory.newResource(NS, 'Trip', tripId);
 
         tripData.tentativeTripLegs.forEach(tripleg => {
@@ -137,21 +137,6 @@ function createTrip(tripData) {
         // Add to registry
         return tripRegistry.add(trip);
     });
-}
-
-function generateTripId(tripNum, schedule) {
-    var dt = new Date(schedule)
-
-    // Date & Month needs to be in the format 01 02
-    // so add a '0' if they are single digits
-    var month = dt.getMonth() + 1;
-    if ((month + '').length == 1) month = '0' + month;
-    var dayNum = dt.getDate();
-    if ((dayNum + '').length == 1) dayNum = '0' + dayNum;
-
-    // console.log(dayNum,month,dt.getFullYear())
-
-    return tripNum + '-' + month + '-' + dayNum + '-' + (dt.getFullYear() + '').substring(2, 4);
 }
 
 /**
