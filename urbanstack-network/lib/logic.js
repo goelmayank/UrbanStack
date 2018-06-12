@@ -16,29 +16,61 @@ async function createTrip(tripData) {
     var vPassenger = factory.newResource(NS, 'vPassenger', vPassengerId);
 
     vPassenger.vPassengerId = vPassengerId;
-    vPassenger.passengerKey = tripData.passengerKey;
+    vPassenger.passenger = tripData.passenger;
 
-    tripData.tentativeTripLegs.forEach(tripLeg => {
-        tripLeg.TripLegStatus = "STARTED";
+    tripData.tentativeTripLegs.forEach(route => {
+
+        var tripLeg = factory.newResource(NS, 'TripLeg', tripLegId);
+        tripLeg.TripLegStatus = "CREATED";
+        tripLeg.transitProvider = tripData.transitProvider;
+
+        var leg_route = factory.newConcept(NS, "Route");
+
+        leg_route.transitMode = tripData.tentativeTripLegs.origin;
+        leg_route.origin = tripData.tentativeTripLegs.origin;
+        leg_route.destination = tripData.tentativeTripLegs.destination;
+        leg_route.start_time = tripData.tentativeTripLegs.start_time;
+        leg_route.end_time = tripData.tentativeTripLegs.end_time;
+        leg_route.duration = tripData.tentativeTripLegs.duration;
+        leg_route.distance = tripData.tentativeTripLegs.distance;
+        leg_route.status = tripData.tentativeTripLegs.status;
+        leg_route.fare = tripData.tentativeTripLegs.fare;
+        leg_route.transitProvider = tripData.tentativeTripLegs.transitProvider;
+
+        tripLeg.route = leg_route;
+
         vPassenger.tentativeTripLegs.push(tripLeg);
-        return getParticipantRegistry('org.urbanstack.TransitProvider')
-            .then(function(transitProviderRegistry) {
-                return transitProviderRegistry.get(tripLeg.transitProviderKey);
-            }).then(function(transitProvider) {
-                if (!transitProvider) throw new Error("Transit Provider with: " + tripLeg.transitProviderKey, " Not Found!!!");
-                transitProvider.tentativeTripLegs.push(tripLegId);
-            });
+        transitProvider.tentativeTripLegs.push(tripLegId);
+
+
+        //save the TripLeg
+        const TripLeg = await getAssetRegistry('org.urbanstack.TripLeg');
+        await TripLeg.add(tripData.tripLeg);
     });
+
+    var route = factory.newConcept(NS, "Route");
+
+    route.transitMode = tripData.overallRoute.origin;
+    route.origin = tripData.overallRoute.origin;
+    route.destination = tripData.overallRoute.destination;
+    route.start_time = tripData.overallRoute.start_time;
+    route.end_time = tripData.overallRoute.end_time;
+    route.duration = tripData.overallRoute.duration;
+    route.distance = tripData.overallRoute.distance;
+    route.status = tripData.overallRoute.status;
+    route.fare = tripData.overallRoute.fare;
+
+    tripLeg.route = route;
+
+    //save the vPassenger
+    vPassenger.vPassengerRoute = "CREATED";
+    const vPassenger = await getAssetRegistry('org.urbanstack.vPassenger');
+    await vPassenger.update(tripData.vPassenger);
 
     // Emit the event TripCreated
     var event = factory.newEvent(NS, 'TripCreated');
     event.vPassengerId = vPassengerId;
     emit(event);
-
-    //save the vPassenger
-    const TripLeg = await getAssetRegistry('org.urbanstack.vPassenger');
-    await TripLeg.update(tripData.vPassenger);
-
 }
 
 /**
@@ -64,21 +96,23 @@ async function ConfirmTripLeg(tripData) {
         throw new Error("start_timed time cannot be in the past!!!");
     }
 
-    tripLeg.transitProvider = tripData.transitProvider;
     //save the TripLeg
     tripLeg.TripLegStatus = "COFIRMED";
     const TripLeg = await getAssetRegistry('org.urbanstack.TripLeg');
     await TripLeg.update(tripLeg);
 
-    tripLeg.transitProvider.tentativeTripLegs.push(tripLeg.tripLegId);
+    var transitProvider = tripLeg.transitProvider;
+    transitProvider.confirmedTripLegs.splice(transitProvider.confirmedTripLegs.indexOf(tripLeg.tripLegId), 1);
+    transitProvider.confirmedTripLegs.push(tripLeg.tripLegId);
+
     //save Transit Provider
     const TransitProvider = await getParticipantRegistry('org.urbanstack.TransitProvider');
-    await TransitProvider.update(tripLeg.transitProvider);
+    await TransitProvider.update(transitProvider);
 
     tripData.vPassenger.currentTripLeg = tripLeg;
     //save the vPassenger
-    const TripLeg = await getAssetRegistry('org.urbanstack.vPassenger');
-    await TripLeg.update(tripData.vPassenger);
+    const vPassenger = await getAssetRegistry('org.urbanstack.vPassenger');
+    await vPassenger.update(tripData.vPassenger);
 
     // Successfully confirmed
     var event = factory.newEvent(NS, 'TripLegConfirmed');
@@ -89,162 +123,168 @@ async function ConfirmTripLeg(tripData) {
 }
 
 /**
- * Create vPassenger Transaction
+ * Bus Scan Transaction
  * @param {org.urbanstack.BusScan} tripData
  * @transaction
  * 
  * Input
- * String vPassengerId
- * String transitProviderKey
  * String MiD
+ * Place currentLocation
+ * -- > vPassenger vPassenger
+ * -- > TransitProvider transitProvider
  * **/
 async function BusScan(tripData) {
     var factory = getFactory();
     var NS = 'org.urbanstack';
 
     var tripLeg = tripData.vPassenger.currentTripLeg;
-    var transitProvider = tripData.transitProvider;
     if (!tripLeg) {
-        // Successful update
+        // no tripLeg found
         var event = factory.newEvent(NS, 'CreateNewTripLeg');
         event.vPassengerId = tripData.vPassengerId;
         event.tripLegId = tripLegId;
         emit(event);
     } else {
+        if (transitProvider.paymentPreference == "START") {
+            var transitProvider = tripData.transitProvider;
+            var passenger = tripData.vPassenger.passenger;
+            var fare = tripLeg.fare;
 
-        var fare = tripLeg.fare;
+            passenger.balance -= fare;
+            //save the Passenger
+            const Passenger = await getParticiapantRegistry('org.urbanstack.Passenger');
+            await Passenger.update(passenger);
 
-        tripLeg.deviceIds.push(tripData.MiD);
+            transitProvider.balance += fare;
+            //save Transit Provider
+            const TransitProvider = await getParticipantRegistry('org.urbanstack.TransitProvider');
+            await TransitProvider.update(tripData.transitProvider);
+        }
+
+        tripLeg.MIds.push(tripData.MiD);
         tripLeg.start_time = tripData.timestamp;
-        tripLeg.transitProviderKey = transitProvider.transitProviderKey;
+
         tripData.tripLeg.TripLegStatus = "BOARDEDBUS";
         //save the TripLeg
         const TripLeg = await getAssetRegistry('org.urbanstack.TripLeg');
         await TripLeg.update(tripData.tripLeg);
 
-        var passenger = tripData.vPassenger.passenger;
-        passenger.balance -= fare;
-        //save the Passenger
-        const Passenger = await getParticiapantRegistry('org.urbanstack.Passenger');
-        await Passenger.update(passenger);
-
-
-        transitProvider.balance += fare;
-        //save Transit Provider
-        const TransitProvider = await getParticipantRegistry('org.urbanstack.TransitProvider');
-        await TransitProvider.update(tripData.transitProvider);
-
-        // Successful scan
+        // Successful transaction
         var event = factory.newEvent(NS, 'QRScannedOnBus');
-        event.MiD = tripData.transitProviderKey;
-        event.origin = tripData.origin;
-        event.destination = tripData.destination;
-        event.fare = tripData.fare;
+        event.duration = tripLeg.duration;
+        event.origin = tripLeg.origin;
+        event.destination = tripLeg.destination;
+        event.fare = tripLeg.fare;
         emit(event);
     }
 }
 
 /**
- * Start vPassenger Transaction
+ * Start Trip Transaction
  * @param {org.urbanstack.ConfirmTripLeg} tripData
  * @transaction
- * Input:
- * DateTime start_time
- * TripLeg[] tentativeTripLegs
- * String passengerKey
- */
+ *
+ * Input
+ * String MiD
+ * Place currentLocation
+ * -- > vPassenger vPassenger
+ * -- > TransitProvider transitProvider
+ * **/
 async function StartTrip(tripData) {
     var factory = getFactory();
     var NS = 'org.urbanstack';
 
     var tripLeg = tripData.vPassenger.currentTripLeg;
-    var transitProvider = tripData.transitProvider;
     if (!tripLeg) {
-        // Successful update
+        // no tripLeg found
         var event = factory.newEvent(NS, 'CreateNewTripLeg');
         event.vPassengerId = tripData.vPassengerId;
         event.tripLegId = tripLegId;
         emit(event);
     } else {
+        if (transitProvider.paymentPreference == "START") {
+            var transitProvider = tripData.transitProvider;
+            var passenger = tripData.vPassenger.passenger;
+            var fare = tripLeg.fare;
 
-        var fare = tripLeg.fare;
+            passenger.balance -= fare;
+            //save the Passenger
+            const Passenger = await getParticiapantRegistry('org.urbanstack.Passenger');
+            await Passenger.update(passenger);
 
-        tripLeg.deviceIds.push(tripData.MiD);
+            transitProvider.balance += fare;
+            //save Transit Provider
+            const TransitProvider = await getParticipantRegistry('org.urbanstack.TransitProvider');
+            await TransitProvider.update(tripData.transitProvider);
+        }
+
+        tripLeg.MIds.push(tripData.MiD);
         tripLeg.start_time = tripData.timestamp;
-        tripLeg.transitProviderKey = transitProvider.transitProviderKey;
-        tripData.tripLeg.TripLegStatus = "START";
+
+        tripLeg.TripLegStatus = "STARTED";
         //save the TripLeg
         const TripLeg = await getAssetRegistry('org.urbanstack.TripLeg');
         await TripLeg.update(tripData.tripLeg);
 
-        var passenger = tripData.vPassenger.passenger;
-        passenger.balance -= fare;
-        //save the Passenger
-        const Passenger = await getParticiapantRegistry('org.urbanstack.Passenger');
-        await Passenger.update(passenger);
-
-
-        transitProvider.balance += fare;
-        //save Transit Provider
-        const TransitProvider = await getParticipantRegistry('org.urbanstack.TransitProvider');
-        await TransitProvider.update(tripData.transitProvider);
-
-        // Successful scan
+        // Successful transaction
         var event = factory.newEvent(NS, 'TripStarted');
-        event.MiD = tripData.transitProviderKey;
-        event.origin = tripData.origin;
-        event.destination = tripData.destination;
-        event.fare = tripData.fare;
+        event.duration = tripLeg.duration;
+        event.origin = tripLeg.origin;
+        event.destination = tripLeg.destination;
+        event.fare = tripLeg.fare;
+
         emit(event);
     }
 }
 
 /**
- * End vPassenger Transaction
+ * End Trip Transaction
  * @param {org.urbanstack.ConfirmTripLeg} tripData
  * @transaction
- * Input:
- * DateTime start_time
- * TripLeg[] tentativeTripLegs
- * String passengerKey
- */
+ *
+ * Input
+ * String MiD
+ * Place currentLocation
+ * -- > vPassenger vPassenger
+ * -- > TransitProvider transitProvider
+ * **/
 async function EndTrip(tripData) {
     var factory = getFactory();
     var NS = 'org.urbanstack';
 
     var tripLeg = tripData.vPassenger.currentTripLeg;
-    var transitProvider = tripData.transitProvider;
     if (!tripLeg) {
-        // Successful update
+        // no tripLeg found
         var event = factory.newEvent(NS, 'CreateNewTripLeg');
         event.vPassengerId = tripData.vPassengerId;
         event.tripLegId = tripLegId;
         emit(event);
     } else {
+        if (transitProvider.paymentPreference == "END") {
+            var transitProvider = tripData.transitProvider;
+            var passenger = tripData.vPassenger.passenger;
+            var fare = tripLeg.fare;
 
-        var fare = tripLeg.fare;
+            passenger.balance -= fare;
+            //save the Passenger
+            const Passenger = await getParticiapantRegistry('org.urbanstack.Passenger');
+            await Passenger.update(passenger);
 
-        tripLeg.deviceIds.push(tripData.MiD);
+            transitProvider.balance += fare;
+            //save Transit Provider
+            const TransitProvider = await getParticipantRegistry('org.urbanstack.TransitProvider');
+            await TransitProvider.update(tripData.transitProvider);
+        }
+
+        tripLeg.MIds.push(tripData.MiD);
         tripLeg.END_time = tripData.timestamp;
-        tripLeg.transitProviderKey = transitProvider.transitProviderKey;
-        tripData.tripLeg.TripLegStatus = "END";
+
+        tripData.tripLeg.TripLegStatus = "ENDED";
         //save the TripLeg
         const TripLeg = await getAssetRegistry('org.urbanstack.TripLeg');
         await TripLeg.update(tripData.tripLeg);
 
-        var passenger = tripData.vPassenger.passenger;
-        passenger.balance -= fare;
-        //save the Passenger
-        const Passenger = await getParticiapantRegistry('org.urbanstack.Passenger');
-        await Passenger.update(passenger);
-
-
-        transitProvider.balance += fare;
-        //save Transit Provider
-        const TransitProvider = await getParticipantRegistry('org.urbanstack.TransitProvider');
-        await TransitProvider.update(tripData.transitProvider);
-
-        // Successful scan
+        // Successful transaction
         var event = factory.newEvent(NS, 'TripEnded');
         event.MiD = tripData.MiD;
         event.currentLocation = tripData.currentLocation;

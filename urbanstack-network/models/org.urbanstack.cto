@@ -10,8 +10,8 @@ enum TransitMode {
   o   BikeShare
 }
 
-enum TripLegStatus{
-  o BOOKED
+enum TripStatus{
+  o CREATED
   o CONFIRMED
   o STARTED
   o ENDED
@@ -19,22 +19,26 @@ enum TripLegStatus{
 }
 
 enum Ownership {
-  o   LEASED
-  o   OWNED
+  o LEASED
+  o OWNED
 }
 
+enum PaymentPreference {
+  o START
+  o END
+}
 concept KeyValue {
-  o String vPassengerId
+  o String    vPassengerId
   --> TripLeg tripLeg
 }
 
 concept Place {
-  o String address
-  o Double lat optional
-  o Double lng optional
-  o String PlaceId optional
-  o String[] incomingPassengerKeys optional
-  o String[] outgoingPassengerKeys optional
+  o String    address
+  o Double    lat optional
+  o Double    lng optional
+  o String    PlaceId optional
+  o String[]  incomingPassengerKeys optional
+  o String[]  outgoingPassengerKeys optional
 }
 
 concept City {
@@ -59,8 +63,9 @@ concept Route {
   o   DateTime        end_time optional
   o   Double          duration
   o   Double          distance
-  o   TripLegStatus   status
+  o   TripStatus      status
   o   Double          fare
+  --> TransitProvider transitProvider optional
 }
 abstract participant User identified by participantKey {
   o String          participantKey
@@ -79,24 +84,24 @@ participant Passenger extends User {
 }
 
 participant TransitProvider extends User {
-  --> MobilityAsset[] mobilityassets optional
   o Double balance
   o String[]  tentativeTripLegs
   o String[]  completedTripLegs 
   o TransitMode transitMode
-  o City city
+  o PaymentPreference paymentPreference
+  --> MobilityAsset[] mobilityassets optional
 }
 
 asset TripLeg identified by tripLegId{
   o   String          tripLegId
-  o   Route           leg_route
-  o   String[]        deviceIds optional
+  o   Route           route
+  o   String[]        MIds optional
   --> TransitProvider transitProvider optional
 }
 
 asset vPassenger identified by vPassengerId {
-  o   String    vPassengerId
   o   Route     route
+  o   String    vPassengerId
   o   String[]  tentativeTripLegIds
   o   String[]  completedTripLegIds optional
   --> Passenger passenger
@@ -111,13 +116,15 @@ asset MobilityAsset identified by MiD {
 }
 
 transaction CreateTrip  {
-  o Route[] tentativeTripLegs
-  o String  passengerKey
+  o Route             overallRoute
+  o Route[]           tentativeTripLegs
+  --> Passenger       Passenger
+  --> TransitProvider transitProvider
 }
 
 transaction ConfirmTripLeg  {
   o DateTime          start_time
-  o String            passengerKey
+  --> Passenger       Passenger
   --> TripLeg         tripLeg
   --> vPassenger      vPassenger
   --> TransitProvider transitProvider
@@ -134,7 +141,6 @@ transaction StartTrip{
   o String            MiD
   o Place             currentLocation
   --> vPassenger      vPassenger
-  --> TransitProvider transitProvider
 }
 
 transaction EndTrip{
