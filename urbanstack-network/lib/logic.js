@@ -83,7 +83,6 @@ function BusScan(tripData) {
     var tripLegId;
     var fare;
     var passengerRegistry = {}
-
     var vPassengerRegistry = {}
 
     return getParticipantRegistry('org.urbanstack.cto.TransitProvider').then(function(registry) {
@@ -104,7 +103,7 @@ function BusScan(tripData) {
             }
         });
         transitProvider.balance += fare;
-
+        return transitProviderRegistry.update(transitProvider);
     });
 
     return getParticipantRegistry('org.urbanstack.cto.Passenger').then(function(registry) {
@@ -157,15 +156,7 @@ function BusScan(tripData) {
  * String passengerKey
  */
 function StartTrip(tripData) {
-    /**
-     * 1. Validate the start_time data
-     * If the date is a past date then throw an error
-     */
-    var timeNow = new Date().getTime();
-    var schedTime = new Date(tripData.start_time).getTime();
-    if (schedTime < timeNow) {
-        throw new Error("start_timed time cannot be in the past!!!");
-    }
+
 }
 
 /**
@@ -178,13 +169,5 @@ function StartTrip(tripData) {
  * String passengerKey
  */
 function EndTrip(tripData) {
-    /**
-     * 1. Validate the start_time data
-     * If the date is a past date then throw an error
-     */
-    var timeNow = new Date().getTime();
-    var schedTime = new Date(tripData.start_time).getTime();
-    if (schedTime < timeNow) {
-        throw new Error("start_timed time cannot be in the past!!!");
-    }
+
 }
