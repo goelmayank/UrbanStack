@@ -12,7 +12,7 @@ concept Contact {
 }
 
 participant Passenger extends User {
-  --> Trip[] trips
+  --> vPassenger[] trips
   o Double balance
 }
 
@@ -21,18 +21,20 @@ participant TransitProvider extends User {
   o Double balance
   o KeyValue[]  tentativeTripLegs
   o String[]  completedTripLegs 
+  o TransitMode transitMode
+  o City city
 }
 
 concept KeyValue {
-  o String tripId
+  o String vPassengerId
   --> TripLeg tripLeg
 }
 
 asset TripLeg identified by TripLegId{
   o   String  TripLegId
-  o   TravelMode  travelMode
-  o   Location  leg_origin
-  o   Location  leg_destination
+  o   TransitMode  transitMode
+  o   Place  leg_origin
+  o   Place  leg_destination
   o   DateTime  start_time optional
   o   DateTime  end_time optional
   o   Double  duration
@@ -40,14 +42,12 @@ asset TripLeg identified by TripLegId{
   o   TripLegStatus status
   o   Double    fare
   o   String  MiD optional
-  o   String  passengerKey
-  o   String  transitProviderKey optional
-  // --> Passenger passenger optional
-  // --> TransitProvider transitProvider optional
+  --> TransitProvider transitProvider optional
 }
 
 enum TripLegStatus{
   o BOOKED
+  o CONFIRMED
   o STARTED
   o ENDED
 }
@@ -63,14 +63,15 @@ enum Ownership {
   o   OWNED
 }
 
-asset Trip identified by tripId {
-  o   String  tripId
-  o   String  passengerKey 
+asset vPassenger identified by vPassengerId {
+  o   String  vPassengerId
+  o   String  CurrentTripLegId
   o   String[] tentativeTripLegIds
   o   String[] completedTripLegIds optional
+  --> Passenger owner
 }
 
-enum TravelMode {
+enum TransitMode {
   o   Walking
   o   TNC
   o   Auto
@@ -87,49 +88,70 @@ asset MobilityAsset identified by MiD {
   --> Operator operator optional
 }
 
-concept Location {
-  o String name
+concept Place {
   o String address
-  --> Passenger[] incomingPassengers optional
-  --> Passenger[] outgoingPassengers optional
+  o Double lat optional
+  o Double lng optional
+  o String PlaceId optional
+  o String[] incomingPassengerKeys optional
+  o String[] outgoingPassengerKeys optional
 }
 
-transaction StartTrip{
-  o String[] logs optional
-  --> Trip trip
-  --> MobilityAsset mobilityAsset
-}
-
-transaction EndTrip{
-  o String[] logs optional
-  --> Trip trip
-  --> MobilityAsset mobilityAsset
+concept City {
+  o String name
+  o Double lat optional
+  o Double lng optional
+  o String[] incomingPassengerKeys optional
+  o String[] outgoingPassengerKeys optional
 }
 
 transaction CreateTrip  {
+  o TripLeg[]   tentativeTripLegs
+  o String      passengerKey
+}
+
+transaction ConfirmTripLeg  {
   o DateTime    start_time
   o TripLeg[]   tentativeTripLegs
   o String      passengerKey
 }
 
-event TripCreated {
-  o String      tripId
-}
-
 transaction BusScan {
-  o String    tripId
+  o String    vPassengerId
   o String    transitProviderKey
   o String    MiD
 }
 
-event QRScannedOnBus {
-  o String      tripId
-  o String      MiD
-  o Location    origin
-  o Location    destination
+transaction StartTrip{
+  --> vPassenger vPassenger
+  --> MobilityAsset mobilityAsset
 }
 
-event CreateNewTripLeg {
-  o String      tripId
+transaction EndTrip{
+  --> vPassenger vPassenger
+  --> MobilityAsset mobilityAsset
+}
+
+event TripCreated {
+  o String      vPassengerId
+}
+
+event TripLegConfirmed {
+  o String      vPassengerId
   o String      tripLegId
+}
+
+event TripStarted {
+  o String      vPassengerId
+}
+
+event TripCompleted {
+  o String      vPassengerId
+  o String      tripLegId
+}
+event QRScannedOnBus {
+  o String   vPassengerId
+  o String   MiD
+  o Place    origin
+  o Place    destination
 }

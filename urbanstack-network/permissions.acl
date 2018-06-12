@@ -46,3 +46,12 @@ rule NetworkAdminSystem {
   resource: "org.hyperledger.composer.system.**"
   action: ALLOW
 }
+
+rule TransitProviderPermission {
+  description: "only ACME personnel can create a TripLeg"
+  participant: "org.urbanstack.TransitProvider"
+  operation: ALL
+  resource: "org.urbanstack.TripLeg"
+  transaction: "org.urbanstack.CreateTrip"
+  action: ALLOW
+}
