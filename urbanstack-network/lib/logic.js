@@ -97,7 +97,7 @@ function BusScan(tripData) {
                 keyValue.tripLeg.MiD = tripData.MiD;
                 keyValue.tripLeg.TripLegStatus = "STARTED";
                 keyValue.tripLeg.transitProviderKey = tripData.transitProviderKey;
-                
+
                 tripLegId = keyValue.tripLeg.tripLegId;
                 fare = keyValue.tripLeg.fare;
             }
@@ -105,41 +105,48 @@ function BusScan(tripData) {
             throw new Error(error);
         });
 
-        if (!tripLegId) throw new Error("Trip Leg with: " + tripLegId, " Not Found!!!");
-        return getAssetRegistry('org.urbanstack.cto.vPassenger').then(function(registry) {
-            vPassengerRegistry = registry
-            return vPassengerRegistry.get(tripData.vPassengerId);
-        }).then(function(vPassenger) {
-            if (!vPassenger) throw new Error("vPassenger with: " + tripData.vPassengerId, " Not Found!!!");
-            
+        if (!tripLegId) {
             // Successful update
-            var event = factory.newEvent('org.urbanstack.cto', 'QRScannedOnBus');
-            event.MiD = tripData.transitProviderKey;
-            event.origin = tripData.origin;
-            event.destination = tripData.destination;
-            event.fare = tripData.fare;
+            var event = factory.newEvent('org.urbanstack.cto', 'CreateNewTripLeg');
+            event.vPassengerId = tripData.vPassengerId;
+            event.tripLegId = tripLegId;
             emit(event);
-            
-            return getParticipantRegistry('org.urbanstack.cto.Passenger').then(function(registry) {
-                passengerRegistry = registry
-                return passengerRegistry.get(passengerKey);
-            }).then(function(passenger) {
-                if (!passenger) throw new Error("Passenger with: " + tripData.participantKey, " Not Found!!!");
-        
-                //update balance
-                passenger.balance -= fare;
-                return passengerRegistry.update(passenger);
+        } else {
+            return getAssetRegistry('org.urbanstack.cto.vPassenger').then(function(registry) {
+                vPassengerRegistry = registry
+                return vPassengerRegistry.get(tripData.vPassengerId);
+            }).then(function(vPassenger) {
+                if (!vPassenger) throw new Error("vPassenger with: " + tripData.vPassengerId, " Not Found!!!");
+
+                // Successful update
+                var event = factory.newEvent('org.urbanstack.cto', 'QRScannedOnBus');
+                event.MiD = tripData.transitProviderKey;
+                event.origin = tripData.origin;
+                event.destination = tripData.destination;
+                event.fare = tripData.fare;
+                emit(event);
+
+                return getParticipantRegistry('org.urbanstack.cto.Passenger').then(function(registry) {
+                    passengerRegistry = registry
+                    return passengerRegistry.get(passengerKey);
+                }).then(function(passenger) {
+                    if (!passenger) throw new Error("Passenger with: " + tripData.participantKey, " Not Found!!!");
+
+                    //update balance
+                    passenger.balance -= fare;
+                    return passengerRegistry.update(passenger);
+                }).catch(function(error) {
+                    throw new Error(error);
+                });
+
+                passengerKey = vPassenger.passengerKey;
+                vPassenger.completedTripLegs.push(tripLegId);
+                return vPassengerRegistry.update(vPassenger);
             }).catch(function(error) {
                 throw new Error(error);
             });
-            
-            passengerKey = vPassenger.passengerKey;
-            vPassenger.completedTripLegs.push(tripLegId);
-            return vPassengerRegistry.update(vPassenger);
-        }).catch(function(error) {
-            throw new Error(error);
-        });
-        
+        }
+
         transitProvider.balance += fare;
         return transitProviderRegistry.update(transitProvider);
     });

@@ -69,7 +69,7 @@ participant Passenger extends User {
 participant TransitProvider extends User {
   --> MobilityAsset[] mobilityassets optional
   o Double balance
-  --> TripLeg[]  tentativeTripLegs
+  o String[]  tentativeTripLegs
   o String[]  completedTripLegs 
   o TransitMode transitMode
   o City city
@@ -154,4 +154,8 @@ event QRScannedOnBus {
   o String   MiD
   o Place    origin
   o Place    destination
+}
+
+event CreateNewTripLeg {
+  o String      vPassengerId
 }
