@@ -75,26 +75,26 @@ participant TransitProvider extends User {
   o City city
 }
 
-asset TripLeg identified by TripLegId{
-  o   String  TripLegId
-  o   TransitMode  transitMode
-  o   Place  leg_origin
-  o   Place  leg_destination
-  o   DateTime  start_time optional
-  o   DateTime  end_time optional
-  o   Double  duration
-  o   Double  distance
-  o   TripLegStatus status
-  o   Double    fare
-  o   String  MiD optional
+asset TripLeg identified by tripLegId{
+  o   String          tripLegId
+  o   TransitMode     transitMode
+  o   Place           leg_origin
+  o   Place           leg_destination
+  o   DateTime        start_time optional
+  o   DateTime        end_time optional
+  o   Double          duration
+  o   Double          distance
+  o   TripLegStatus   status
+  o   Double          fare
+  o   String          MiD optional
   --> TransitProvider transitProvider optional
 }
 
 asset vPassenger identified by vPassengerId {
-  o   String  vPassengerId
-  o   String  CurrentTripLegId
-  o   String[] tentativeTripLegIds
-  o   String[] completedTripLegIds optional
+  o   String    vPassengerId
+  o   String    currentTripLegId optional
+  o   String[]  tentativeTripLegIds
+  o   String[]  completedTripLegIds optional
   --> Passenger owner
 }
 
