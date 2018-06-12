@@ -15,6 +15,7 @@ enum TripLegStatus{
   o CONFIRMED
   o STARTED
   o ENDED
+  o BOARDEDBUS
 }
 
 enum Ownership {
@@ -50,6 +51,17 @@ concept Contact {
   o String email
 }
 
+concept Route {
+  o   TransitMode     transitMode
+  o   Place           origin
+  o   Place           destination
+  o   DateTime        start_time optional
+  o   DateTime        end_time optional
+  o   Double          duration
+  o   Double          distance
+  o   TripLegStatus   status
+  o   Double          fare
+}
 abstract participant User identified by participantKey {
   o String          participantKey
   o Contact         contact
@@ -77,25 +89,18 @@ participant TransitProvider extends User {
 
 asset TripLeg identified by tripLegId{
   o   String          tripLegId
-  o   TransitMode     transitMode
-  o   Place           leg_origin
-  o   Place           leg_destination
-  o   DateTime        start_time optional
-  o   DateTime        end_time optional
-  o   Double          duration
-  o   Double          distance
-  o   TripLegStatus   status
-  o   Double          fare
-  o   String          MiD optional
+  o   Route           leg_route
+  o   String[]        deviceIds optional
   --> TransitProvider transitProvider optional
 }
 
 asset vPassenger identified by vPassengerId {
   o   String    vPassengerId
-  o   String    currentTripLegId optional
+  o   Route     route
   o   String[]  tentativeTripLegIds
   o   String[]  completedTripLegIds optional
-  --> Passenger owner
+  --> Passenger passenger
+  --> TripLeg   currentTripLeg optional
 }
 
 asset MobilityAsset identified by MiD {
@@ -106,30 +111,37 @@ asset MobilityAsset identified by MiD {
 }
 
 transaction CreateTrip  {
-  o TripLeg[]   tentativeTripLegs
-  o String      passengerKey
+  o Route[] tentativeTripLegs
+  o String  passengerKey
 }
 
 transaction ConfirmTripLeg  {
-  o DateTime    start_time
-  o TripLeg[]   tentativeTripLegs
-  o String      passengerKey
+  o DateTime          start_time
+  o String            passengerKey
+  --> TripLeg         tripLeg
+  --> vPassenger      vPassenger
+  --> TransitProvider transitProvider
 }
 
 transaction BusScan {
-  o String    vPassengerId
-  o String    transitProviderKey
-  o String    MiD
+  o String            MiD
+  o Place             currentLocation
+  --> vPassenger      vPassenger
+  --> TransitProvider transitProvider
 }
 
 transaction StartTrip{
-  --> vPassenger vPassenger
-  --> MobilityAsset mobilityAsset
+  o String            MiD
+  o Place             currentLocation
+  --> vPassenger      vPassenger
+  --> TransitProvider transitProvider
 }
 
 transaction EndTrip{
-  --> vPassenger vPassenger
-  --> MobilityAsset mobilityAsset
+  o String            MiD
+  o Place             currentLocation
+  --> vPassenger      vPassenger
+  --> TransitProvider transitProvider
 }
 
 event TripCreated {
