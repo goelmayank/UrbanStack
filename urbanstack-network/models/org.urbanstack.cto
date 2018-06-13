@@ -56,16 +56,14 @@ concept Contact {
 }
 
 concept Route {
-  o   TransitMode     transitMode
   o   Place           origin
   o   Place           destination
   o   DateTime        start_time optional
   o   DateTime        end_time optional
   o   Double          duration
   o   Double          distance
-  o   TripStatus      status
+  o   TripStatus      status default = "CREATED"
   o   Double          fare
-  --> TransitProvider transitProvider optional
 }
 abstract participant User identified by participantKey {
   o String          participantKey
@@ -85,10 +83,11 @@ participant Passenger extends User {
 
 participant TransitProvider extends User {
   o Double balance
-  o String[]  tentativeTripLegs
-  o String[]  completedTripLegs 
-  o TransitMode transitMode
+  o TransitMode       transitMode
   o PaymentPreference paymentPreference
+  --> TripLeg[]       tentativeTripLegs optional
+  --> TripLeg[]       confirmedTripLegs optional
+  --> TripLeg[]       completedTripLegs optional
   --> MobilityAsset[] mobilityassets optional
 }
 
@@ -96,15 +95,17 @@ asset TripLeg identified by tripLegId{
   o   String          tripLegId
   o   Route           route
   o   String[]        MIds optional
-  --> TransitProvider transitProvider optional
+  o   TransitMode     transitMode default = "Bus"
+  --> TransitProvider transitProvider
 }
 
 asset vPassenger identified by vPassengerId {
   o   Route     route
   o   String    vPassengerId
-  o   String[]  tentativeTripLegIds
-  o   String[]  completedTripLegIds optional
   --> Passenger passenger
+  --> TripLeg[]  tentativeTripLegs 
+  --> TripLeg[]  confirmedTripLegs optional
+  --> TripLeg[]  completedTripLegs optional
   --> TripLeg   currentTripLeg optional
 }
 
@@ -117,9 +118,8 @@ asset MobilityAsset identified by MiD {
 
 transaction CreateTrip  {
   o Route             overallRoute
-  o Route[]           tentativeTripLegs
+  o TripLeg[]         tentativeTripLegs
   --> Passenger       Passenger
-  --> TransitProvider transitProvider
 }
 
 transaction ConfirmTripLeg  {
