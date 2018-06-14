@@ -3,6 +3,7 @@ node_modules
 
 # Code testing coverage
 coverage
+package-lock.json
 
 # Ionic
 .sourcemaps

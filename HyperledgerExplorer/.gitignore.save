@@ -3,7 +3,6 @@
 # compiled output
 /dist
 /tmp
-package-lock.json
 
 # dependencies
 /node_modules
@@ -15,6 +14,7 @@ package-lock.json
 .c9/
 *.launch
 .settings/
+package-lock.json
 
 # IDE - VSCode
 .vscode/*
