@@ -51,10 +51,10 @@ async function createTrip(tripData) {
     await TripLegRegistry.addAll(tripLegs);
 
     vPassenger.route = tripData.overallRoute;
-
+    vPassenger.passenger = tripData.passenger;
     //add the vPassenger
     const vPassengerRegistry = await getAssetRegistry(NS +'.vPassenger');
-    await vPassengerRegistry.add(tripData.vPassenger);
+    await vPassengerRegistry.add(vPassenger);
 
     //save Transit Provider
     const TransitProviderRegistry = await getParticipantRegistry(NS +'.TransitProvider');

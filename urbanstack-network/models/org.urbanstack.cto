@@ -119,7 +119,7 @@ asset MobilityAsset identified by MiD {
 transaction CreateTrip  {
   o Route             overallRoute
   o TripLeg[]         tentativeTripLegs
-  --> Passenger       Passenger
+  --> Passenger       passenger
 }
 
 transaction ConfirmTripLeg  {
