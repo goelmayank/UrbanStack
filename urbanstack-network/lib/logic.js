@@ -39,8 +39,8 @@ async function createTrip(tripData) {
             vPassenger.tentativeTripLegs = [tripLeg];
         }
 
-        if (passenger.vPassenger) {
-            passenger.vPassenger.push(vPassenger);
+        if (passenger.vPassengers) {
+            passenger.vPassengers.push(vPassenger);
         } else {
             passenger.vPassenger = [tripLeg];
         }
