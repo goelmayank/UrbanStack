@@ -138,6 +138,7 @@ async function ConfirmTripLeg(tripData) {
  * -- > TransitProvider transitProvider
  * **/
 async function BusScan(tripData) {
+
     var factory = getFactory();
     var NS = 'org.urbanstack';
     var vPassenger = tripData.vPassenger;
@@ -154,7 +155,7 @@ async function BusScan(tripData) {
         
         if (transitProvider.paymentPreference == "START") {
             var passenger = vPassenger.passenger;
-            var fare = tripLeg.fare;
+            var fare = tripLeg.route.fare;
 
             passenger.balance -= fare;
             transitProvider.balance += fare;
@@ -165,7 +166,7 @@ async function BusScan(tripData) {
         }
 
         tripLeg.route.status = "BOARDEDBUS";
-        tripLeg.start_time = tripData.timestamp;
+        tripLeg.route.start_time = tripData.timestamp;
         vPassenger.confirmedTripLegs.splice(vPassenger.confirmedTripLegs.indexOf(tripLeg), 1);
         transitProvider.confirmedTripLegs.splice(transitProvider.confirmedTripLegs.indexOf(tripLeg), 1);
     
@@ -193,15 +194,15 @@ async function BusScan(tripData) {
 
         //save Transit Provider
         const TransitProviderRegistry = await getParticipantRegistry(NS +'.TransitProvider');
-        await TransitProviderRegistry.update(tripData.transitProvider);
+        await TransitProviderRegistry.update(transitProvider);
 
         //save vPassenger
-        const vPassengerRegistry = await getParticipantRegistry(NS +'.vPassenger');
-        await vPassengerRegistry.update(tripData.vPassenger);
+        const vPassengerRegistry = await getAssetRegistry(NS +'.vPassenger');
+        await vPassengerRegistry.update(vPassenger);
 
         // Successful transaction
         var event = factory.newEvent(NS, 'QRScannedOnBus');
-        event.Mid = Mid;
+        event.MiD = MiD;
         event.tripLegId = tripLeg.tripLegId;
         event.vPassengerId = vPassenger.vPassengerId;
         emit(event);
@@ -236,7 +237,7 @@ async function StartTrip(tripData) {
         
         if (transitProvider.paymentPreference == "START") {
             var passenger = vPassenger.passenger;
-            var fare = tripLeg.fare;
+            var fare = tripLeg.route.fare;
 
             passenger.balance -= fare;
             transitProvider.balance += fare;
@@ -251,7 +252,7 @@ async function StartTrip(tripData) {
         }
 
         tripLeg.route.status = "STARTED";
-        tripLeg.start_time = tripData.timestamp;
+        tripLeg.route.start_time = tripData.timestamp;
         vPassenger.confirmedTripLegs.splice(vPassenger.confirmedTripLegs.indexOf(tripLeg), 1);
         transitProvider.confirmedTripLegs.splice(transitProvider.confirmedTripLegs.indexOf(tripLeg), 1);
         
@@ -266,12 +267,12 @@ async function StartTrip(tripData) {
         await TripLegRegistry.update(tripLeg);
 
         //save vPassenger
-        const vPassengerRegistry = await getParticipantRegistry(NS +'.vPassenger');
-        await vPassengerRegistry.update(tripData.vPassenger);
+        const vPassengerRegistry = await getAssetRegistry(NS +'.vPassenger');
+        await vPassengerRegistry.update(vPassenger);
 
         // Successful transaction
         var event = factory.newEvent(NS, 'TripStarted');
-        event.Mid = Mid;
+        event.MiD = MiD;
         event.tripLegId = tripLeg.tripLegId;
         event.vPassengerId = vPassenger.vPassengerId;
         emit(event);
@@ -297,7 +298,7 @@ async function EndTrip(tripData) {
     if (!tripLeg) {
         // no tripLeg found
         var event = factory.newEvent(NS, 'CreateNewTripLeg');
-        event.Mid = Mid;
+        event.MiD = MiD;
         event.vPassengerId = vPassenger.vPassengerId;
         emit(event);
     } else {
@@ -306,7 +307,7 @@ async function EndTrip(tripData) {
         
         if (transitProvider.paymentPreference == "END") {
             var passenger = vPassenger.passenger;
-            var fare = tripLeg.fare;
+            var fare = tripLeg.route.fare;
 
             passenger.balance -= fare;
             transitProvider.balance += fare;
@@ -317,7 +318,7 @@ async function EndTrip(tripData) {
         }
 
         tripLeg.route.status = "ENDED";
-        tripLeg.END_time = tripData.timestamp;
+        tripLeg.route.end_time = tripData.timestamp;
         vPassenger.confirmedTripLegs.splice(vPassenger.confirmedTripLegs.indexOf(tripLeg), 1);
         transitProvider.confirmedTripLegs.splice(transitProvider.confirmedTripLegs.indexOf(tripLeg), 1);
     
@@ -345,15 +346,15 @@ async function EndTrip(tripData) {
 
         //save Transit Provider
         const TransitProviderRegistry = await getParticipantRegistry(NS +'.TransitProvider');
-        await TransitProviderRegistry.update(tripData.transitProvider);
+        await TransitProviderRegistry.update(transitProvider);
 
         //save vPassenger
-        const vPassengerRegistry = await getParticipantRegistry(NS +'.vPassenger');
-        await vPassengerRegistry.update(tripData.vPassenger);
+        const vPassengerRegistry = await getAssetRegistry(NS +'.vPassenger');
+        await vPassengerRegistry.update(vPassenger);
         
         // Successful transaction
         var event = factory.newEvent(NS, 'TripEnded');
-        event.Mid = Mid;
+        event.MiD = MiD;
         event.tripLegId = tripLeg.tripLegId;
         event.vPassengerId = vPassenger.vPassengerId;
         emit(event);
