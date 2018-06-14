@@ -1,2 +1,2 @@
-composer archive create --sourceType dir --sourceName . -a urbanstack-network.bna
+composer archive create --sourceType dir --sourceName . -a dist/urbanstack-network.bna
 
