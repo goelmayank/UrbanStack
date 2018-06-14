@@ -165,7 +165,7 @@ event TripStarted {
   o String  vPassengerId
 }
 
-event TripCompleted {
+event TripEnded {
   o String  MiD
   o String  tripLegId
   o String  vPassengerId
