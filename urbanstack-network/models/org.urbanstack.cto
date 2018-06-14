@@ -77,7 +77,7 @@ participant CityPlanner extends User {
 }
 
 participant Passenger extends User {
-  --> vPassenger[] trips
+  --> vPassenger[] trips optional
   o Double balance
 }
 

@@ -21,6 +21,7 @@ async function createTrip(tripData) {
 		var tripLegId = parseInt(Math.random() * 100000000).toString();
         var tripLeg = factory.newResource(NS, 'TripLeg', tripLegId);
         var transitProvider = tentativeTripLeg.transitProvider;
+        var passenger = tripData.passenger;
     
         tripLeg.route = tentativeTripLeg.route;
         tripLeg.transitMode = tentativeTripLeg.transitMode;
@@ -38,9 +39,20 @@ async function createTrip(tripData) {
             vPassenger.tentativeTripLegs = [tripLeg];
         }
 
+        if (passenger.vPassenger) {
+            passenger.vPassenger.push(vPassenger);
+        } else {
+            passenger.vPassenger = [tripLeg];
+        }
+
         tripLegs.push(tripLeg);
         transitProviders.push(transitProvider);
     });
+
+    // Emit the event TripCreated
+    var event = factory.newEvent(NS, 'TripCreated');
+    event.vPassengerId = vPassengerId;
+    emit(event);
 
     //add all the TripLegs
     const TripLegRegistry = await getAssetRegistry(NS +'.TripLeg');
@@ -52,14 +64,13 @@ async function createTrip(tripData) {
     const vPassengerRegistry = await getAssetRegistry(NS +'.vPassenger');
     await vPassengerRegistry.add(vPassenger);
 
-    //save Transit Provider
+    //update Transit Provider
     const TransitProviderRegistry = await getParticipantRegistry(NS +'.TransitProvider');
     await TransitProviderRegistry.updateAll(transitProviders);
 
-    // Emit the event TripCreated
-    var event = factory.newEvent(NS, 'TripCreated');
-    event.vPassengerId = vPassengerId;
-    emit(event);
+    //update Passenger
+    const PassengerRegistry = await getParticipantRegistry(NS +'.Passenger');
+    await PassengerRegistry.update(passenger);
 }
 
 /**
@@ -106,24 +117,24 @@ async function ConfirmTripLeg(tripData) {
     } else {
         vPassenger.confirmedTripLegs = [tripLeg];
     }
-    
-    //save the TripLeg
-    const TripLegRegistry = await getAssetRegistry(NS +'.TripLeg');
-    await TripLegRegistry.update(tripLeg);
-
-    //save Transit Provider
-    const TransitProviderRegistry = await getParticipantRegistry(NS +'.TransitProvider');
-    await TransitProviderRegistry.update(transitProvider);
-
-    //save the vPassenger
-    const vPassengerRegistry = await getAssetRegistry(NS +'.vPassenger');
-    await vPassengerRegistry.update(vPassenger);
 
     // Successfully confirmed
     var event = factory.newEvent(NS, 'TripLegConfirmed');
     event.tripLegId = tripLeg.tripLegId;
     event.vPassengerId = vPassenger.vPassengerId;
     emit(event);
+
+    //update the TripLeg
+    const TripLegRegistry = await getAssetRegistry(NS +'.TripLeg');
+    await TripLegRegistry.update(tripLeg);
+
+    //update Transit Provider
+    const TransitProviderRegistry = await getParticipantRegistry(NS +'.TransitProvider');
+    await TransitProviderRegistry.update(transitProvider);
+
+    //update the vPassenger
+    const vPassengerRegistry = await getAssetRegistry(NS +'.vPassenger');
+    await vPassengerRegistry.update(vPassenger);
 }
 
 /**
@@ -160,7 +171,7 @@ async function BusScan(tripData) {
             passenger.balance -= fare;
             transitProvider.balance += fare;
 
-            //save the Passenger
+            //update the Passenger
             const PassengerRegistry = await getParticipantRegistry(NS +'.Passenger');
             await PassengerRegistry.update(passenger);
         }
@@ -183,22 +194,11 @@ async function BusScan(tripData) {
         }
     
         if (vPassenger.completedTripLegs) {
+
             vPassenger.completedTripLegs.push(tripLeg);
         } else {
             vPassenger.completedTripLegs = [tripLeg];
         }
-
-        //save the TripLeg
-        const TripLegRegistry = await getAssetRegistry(NS +'.TripLeg');
-        await TripLegRegistry.update(tripLeg);
-
-        //save Transit Provider
-        const TransitProviderRegistry = await getParticipantRegistry(NS +'.TransitProvider');
-        await TransitProviderRegistry.update(transitProvider);
-
-        //save vPassenger
-        const vPassengerRegistry = await getAssetRegistry(NS +'.vPassenger');
-        await vPassengerRegistry.update(vPassenger);
 
         // Successful transaction
         var event = factory.newEvent(NS, 'QRScannedOnBus');
@@ -206,6 +206,18 @@ async function BusScan(tripData) {
         event.tripLegId = tripLeg.tripLegId;
         event.vPassengerId = vPassenger.vPassengerId;
         emit(event);
+
+        //update the TripLeg
+        const TripLegRegistry = await getAssetRegistry(NS +'.TripLeg');
+        await TripLegRegistry.update(tripLeg);
+
+        //update Transit Provider
+        const TransitProviderRegistry = await getParticipantRegistry(NS +'.TransitProvider');
+        await TransitProviderRegistry.update(transitProvider);
+
+        //update vPassenger
+        const vPassengerRegistry = await getAssetRegistry(NS +'.vPassenger');
+        await vPassengerRegistry.update(vPassenger);
     }
 }
 
@@ -242,11 +254,11 @@ async function StartTrip(tripData) {
             passenger.balance -= fare;
             transitProvider.balance += fare;
 
-            //save the Passenger
+            //update the Passenger
             const PassengerRegistry = await getParticipantRegistry(NS +'.Passenger');
             await PassengerRegistry.update(passenger);
 
-            //save Transit Provider
+            //update Transit Provider
             const TransitProviderRegistry = await getParticipantRegistry(NS +'.TransitProvider');
             await TransitProviderRegistry.update(tripData.transitProvider);
         }
@@ -262,20 +274,20 @@ async function StartTrip(tripData) {
             tripLeg.MIds = [MiD];
         }
 
-        //save the TripLeg
-        const TripLegRegistry = await getAssetRegistry(NS +'.TripLeg');
-        await TripLegRegistry.update(tripLeg);
-
-        //save vPassenger
-        const vPassengerRegistry = await getAssetRegistry(NS +'.vPassenger');
-        await vPassengerRegistry.update(vPassenger);
-
         // Successful transaction
         var event = factory.newEvent(NS, 'TripStarted');
         event.MiD = MiD;
         event.tripLegId = tripLeg.tripLegId;
         event.vPassengerId = vPassenger.vPassengerId;
         emit(event);
+
+        //update the TripLeg
+        const TripLegRegistry = await getAssetRegistry(NS +'.TripLeg');
+        await TripLegRegistry.update(tripLeg);
+
+        //update vPassenger
+        const vPassengerRegistry = await getAssetRegistry(NS +'.vPassenger');
+        await vPassengerRegistry.update(vPassenger);
     }
 }
 
@@ -312,7 +324,7 @@ async function EndTrip(tripData) {
             passenger.balance -= fare;
             transitProvider.balance += fare;
 
-            //save the Passenger
+            //update the Passenger
             const PassengerRegistry = await getParticipantRegistry(NS +'.Passenger');
             await PassengerRegistry.update(passenger);
         }
@@ -340,23 +352,23 @@ async function EndTrip(tripData) {
             vPassenger.completedTripLegs = [tripLeg];
         }
 
-        //save the TripLeg
-        const TripLegRegistry = await getAssetRegistry(NS +'.TripLeg');
-        await TripLegRegistry.update(tripLeg);
-
-        //save Transit Provider
-        const TransitProviderRegistry = await getParticipantRegistry(NS +'.TransitProvider');
-        await TransitProviderRegistry.update(transitProvider);
-
-        //save vPassenger
-        const vPassengerRegistry = await getAssetRegistry(NS +'.vPassenger');
-        await vPassengerRegistry.update(vPassenger);
-        
         // Successful transaction
         var event = factory.newEvent(NS, 'TripEnded');
         event.MiD = MiD;
         event.tripLegId = tripLeg.tripLegId;
         event.vPassengerId = vPassenger.vPassengerId;
         emit(event);
+
+        //update the TripLeg
+        const TripLegRegistry = await getAssetRegistry(NS +'.TripLeg');
+        await TripLegRegistry.update(tripLeg);
+
+        //update Transit Provider
+        const TransitProviderRegistry = await getParticipantRegistry(NS +'.TransitProvider');
+        await TransitProviderRegistry.update(transitProvider);
+
+        //update vPassenger
+        const vPassengerRegistry = await getAssetRegistry(NS +'.vPassenger');
+        await vPassengerRegistry.update(vPassenger);
     }
 }
