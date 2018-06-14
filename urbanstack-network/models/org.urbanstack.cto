@@ -127,7 +127,6 @@ transaction ConfirmTripLeg  {
   --> Passenger       Passenger
   --> TripLeg         tripLeg
   --> vPassenger      vPassenger
-  --> TransitProvider transitProvider
 }
 
 transaction BusScan {
@@ -141,6 +140,7 @@ transaction StartTrip{
   o String            MiD
   o Place             currentLocation
   --> vPassenger      vPassenger
+  --> TransitProvider transitProvider
 }
 
 transaction EndTrip{
@@ -151,29 +151,32 @@ transaction EndTrip{
 }
 
 event TripCreated {
-  o String      vPassengerId
+  o String  vPassengerId
 }
 
 event TripLegConfirmed {
-  o String      vPassengerId
-  o String      tripLegId
+  o String  tripLegId
+  o String  vPassengerId
 }
 
 event TripStarted {
-  o String      vPassengerId
+  o String  MiD
+  o String  tripLegId
+  o String  vPassengerId
 }
 
 event TripCompleted {
-  o String      vPassengerId
-  o String      tripLegId
+  o String  MiD
+  o String  tripLegId
+  o String  vPassengerId
 }
 event QRScannedOnBus {
-  o String   vPassengerId
-  o String   MiD
-  o Place    origin
-  o Place    destination
+  o String  MiD
+  o String  tripLegId
+  o String  vPassengerId
 }
 
 event CreateNewTripLeg {
-  o String      vPassengerId
+  o String  MiD
+  o String  vPassengerId
 }
