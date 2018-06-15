@@ -56,14 +56,14 @@ concept Contact {
 }
 
 concept Route {
-  o   Place           origin
-  o   Place           destination
+  o   Place           start_location
+  o   Place           end_location
   o   DateTime        start_time optional
   o   DateTime        end_time optional
   o   Double          duration
   o   Double          distance
   o   TripStatus      status default = "CREATED"
-  o   Double          fare
+  o   Double          fare optional
 }
 abstract participant User identified by participantKey {
   o String          participantKey
