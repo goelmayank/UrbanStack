@@ -1,0 +1,47 @@
+[
+  {
+    "distance": 262, 
+    "travel_mode": "WALKING", 
+    "start_location_lng": -73.9442203, 
+    "end_location_lng": -73.9471372, 
+    "end_location_lat": 40.6781981, 
+    "start_location_lat": 40.6781877, 
+    "duration": 214
+  }, 
+  {
+    "distance": 12270, 
+    "travel_mode": "TRANSIT", 
+    "start_location_lng": -73.94821999999999, 
+    "end_location_lng": -73.80852999999999, 
+    "end_location_lat": 40.6996, 
+    "start_location_lat": 40.67838, 
+    "duration": 840
+  }, 
+  {
+    "distance": 74, 
+    "travel_mode": "WALKING", 
+    "start_location_lng": -73.8074911, 
+    "end_location_lng": -73.807884, 
+    "end_location_lat": 40.700489, 
+    "start_location_lat": 40.6998915, 
+    "duration": 74
+  }, 
+  {
+    "distance": 4600, 
+    "travel_mode": "TRANSIT", 
+    "start_location_lng": -73.807884, 
+    "end_location_lng": -73.792847, 
+    "end_location_lat": 40.728783, 
+    "start_location_lat": 40.700489, 
+    "duration": 1200
+  }, 
+  {
+    "distance": 230, 
+    "travel_mode": "WALKING", 
+    "start_location_lng": -73.79286019999999, 
+    "end_location_lng": -73.7948802, 
+    "end_location_lat": 40.7282208, 
+    "start_location_lat": 40.7287798, 
+    "duration": 196
+  }
+]
