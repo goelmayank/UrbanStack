@@ -11,22 +11,22 @@
 async function createTrip(tripData) {
     var factory = getFactory();
     var NS = 'org.urbanstack';
-    
+
     var vPassengerId = parseInt(Math.random() * 100000000).toString();
     var vPassenger = factory.newResource(NS, 'vPassenger', vPassengerId);
     var tripLegs = [];
     var transitProviders = [];
-  
+
     tripData.tentativeTripLegs.forEach(tentativeTripLeg => {
-		var tripLegId = parseInt(Math.random() * 100000000).toString();
+        var tripLegId = parseInt(Math.random() * 100000000).toString();
         var tripLeg = factory.newResource(NS, 'TripLeg', tripLegId);
         var transitProvider = tentativeTripLeg.transitProvider;
         var passenger = tripData.passenger;
-    
+
         tripLeg.route = tentativeTripLeg.route;
         tripLeg.transitMode = tentativeTripLeg.transitMode;
         tripLeg.transitProvider = transitProvider;
-        
+
         if (transitProvider.tentativeTripLegs) {
             transitProvider.tentativeTripLegs.push(tripLeg);
         } else {
@@ -55,21 +55,21 @@ async function createTrip(tripData) {
     emit(event);
 
     //add all the TripLegs
-    const TripLegRegistry = await getAssetRegistry(NS +'.TripLeg');
+    const TripLegRegistry = await getAssetRegistry(NS + '.TripLeg');
     await TripLegRegistry.addAll(tripLegs);
 
     vPassenger.route = tripData.overallRoute;
     vPassenger.passenger = tripData.passenger;
     //add the vPassenger
-    const vPassengerRegistry = await getAssetRegistry(NS +'.vPassenger');
+    const vPassengerRegistry = await getAssetRegistry(NS + '.vPassenger');
     await vPassengerRegistry.add(vPassenger);
 
     //update Transit Provider
-    const TransitProviderRegistry = await getParticipantRegistry(NS +'.TransitProvider');
+    const TransitProviderRegistry = await getParticipantRegistry(NS + '.TransitProvider');
     await TransitProviderRegistry.updateAll(transitProviders);
 
     //update Passenger
-    const PassengerRegistry = await getParticipantRegistry(NS +'.Passenger');
+    const PassengerRegistry = await getParticipantRegistry(NS + '.Passenger');
     await PassengerRegistry.update(passenger);
 }
 
@@ -125,15 +125,15 @@ async function ConfirmTripLeg(tripData) {
     emit(event);
 
     //update the TripLeg
-    const TripLegRegistry = await getAssetRegistry(NS +'.TripLeg');
+    const TripLegRegistry = await getAssetRegistry(NS + '.TripLeg');
     await TripLegRegistry.update(tripLeg);
 
     //update Transit Provider
-    const TransitProviderRegistry = await getParticipantRegistry(NS +'.TransitProvider');
+    const TransitProviderRegistry = await getParticipantRegistry(NS + '.TransitProvider');
     await TransitProviderRegistry.update(transitProvider);
 
     //update the vPassenger
-    const vPassengerRegistry = await getAssetRegistry(NS +'.vPassenger');
+    const vPassengerRegistry = await getAssetRegistry(NS + '.vPassenger');
     await vPassengerRegistry.update(vPassenger);
 }
 
@@ -163,7 +163,7 @@ async function BusScan(tripData) {
     } else {
         var MiD = tripData.MiD;
         var transitProvider = tripData.transitProvider;
-        
+
         if (transitProvider.paymentPreference == "START") {
             var passenger = vPassenger.passenger;
             var fare = tripLeg.route.fare;
@@ -172,7 +172,7 @@ async function BusScan(tripData) {
             transitProvider.balance += fare;
 
             //update the Passenger
-            const PassengerRegistry = await getParticipantRegistry(NS +'.Passenger');
+            const PassengerRegistry = await getParticipantRegistry(NS + '.Passenger');
             await PassengerRegistry.update(passenger);
         }
 
@@ -180,7 +180,7 @@ async function BusScan(tripData) {
         tripLeg.route.start_time = tripData.timestamp;
         vPassenger.confirmedTripLegs.splice(vPassenger.confirmedTripLegs.indexOf(tripLeg), 1);
         transitProvider.confirmedTripLegs.splice(transitProvider.confirmedTripLegs.indexOf(tripLeg), 1);
-    
+
         if (tripLeg.MIds) {
             tripLeg.MIds.push(MiD);
         } else {
@@ -192,7 +192,7 @@ async function BusScan(tripData) {
         } else {
             transitProvider.completedTripLegs = [tripLeg];
         }
-    
+
         if (vPassenger.completedTripLegs) {
 
             vPassenger.completedTripLegs.push(tripLeg);
@@ -208,15 +208,15 @@ async function BusScan(tripData) {
         emit(event);
 
         //update the TripLeg
-        const TripLegRegistry = await getAssetRegistry(NS +'.TripLeg');
+        const TripLegRegistry = await getAssetRegistry(NS + '.TripLeg');
         await TripLegRegistry.update(tripLeg);
 
         //update Transit Provider
-        const TransitProviderRegistry = await getParticipantRegistry(NS +'.TransitProvider');
+        const TransitProviderRegistry = await getParticipantRegistry(NS + '.TransitProvider');
         await TransitProviderRegistry.update(transitProvider);
 
         //update vPassenger
-        const vPassengerRegistry = await getAssetRegistry(NS +'.vPassenger');
+        const vPassengerRegistry = await getAssetRegistry(NS + '.vPassenger');
         await vPassengerRegistry.update(vPassenger);
     }
 }
@@ -246,7 +246,7 @@ async function StartTrip(tripData) {
     } else {
         var MiD = tripData.MiD;
         var transitProvider = tripData.transitProvider;
-        
+
         if (transitProvider.paymentPreference == "START") {
             var passenger = vPassenger.passenger;
             var fare = tripLeg.route.fare;
@@ -255,11 +255,11 @@ async function StartTrip(tripData) {
             transitProvider.balance += fare;
 
             //update the Passenger
-            const PassengerRegistry = await getParticipantRegistry(NS +'.Passenger');
+            const PassengerRegistry = await getParticipantRegistry(NS + '.Passenger');
             await PassengerRegistry.update(passenger);
 
             //update Transit Provider
-            const TransitProviderRegistry = await getParticipantRegistry(NS +'.TransitProvider');
+            const TransitProviderRegistry = await getParticipantRegistry(NS + '.TransitProvider');
             await TransitProviderRegistry.update(tripData.transitProvider);
         }
 
@@ -267,7 +267,7 @@ async function StartTrip(tripData) {
         tripLeg.route.start_time = tripData.timestamp;
         vPassenger.confirmedTripLegs.splice(vPassenger.confirmedTripLegs.indexOf(tripLeg), 1);
         transitProvider.confirmedTripLegs.splice(transitProvider.confirmedTripLegs.indexOf(tripLeg), 1);
-        
+
         if (tripLeg.MIds) {
             tripLeg.MIds.push(MiD);
         } else {
@@ -282,11 +282,11 @@ async function StartTrip(tripData) {
         emit(event);
 
         //update the TripLeg
-        const TripLegRegistry = await getAssetRegistry(NS +'.TripLeg');
+        const TripLegRegistry = await getAssetRegistry(NS + '.TripLeg');
         await TripLegRegistry.update(tripLeg);
 
         //update vPassenger
-        const vPassengerRegistry = await getAssetRegistry(NS +'.vPassenger');
+        const vPassengerRegistry = await getAssetRegistry(NS + '.vPassenger');
         await vPassengerRegistry.update(vPassenger);
     }
 }
@@ -316,7 +316,7 @@ async function EndTrip(tripData) {
     } else {
         var MiD = tripData.MiD;
         var transitProvider = tripData.transitProvider;
-        
+
         if (transitProvider.paymentPreference == "END") {
             var passenger = vPassenger.passenger;
             var fare = tripLeg.route.fare;
@@ -325,7 +325,7 @@ async function EndTrip(tripData) {
             transitProvider.balance += fare;
 
             //update the Passenger
-            const PassengerRegistry = await getParticipantRegistry(NS +'.Passenger');
+            const PassengerRegistry = await getParticipantRegistry(NS + '.Passenger');
             await PassengerRegistry.update(passenger);
         }
 
@@ -333,7 +333,7 @@ async function EndTrip(tripData) {
         tripLeg.route.end_time = tripData.timestamp;
         vPassenger.confirmedTripLegs.splice(vPassenger.confirmedTripLegs.indexOf(tripLeg), 1);
         transitProvider.confirmedTripLegs.splice(transitProvider.confirmedTripLegs.indexOf(tripLeg), 1);
-    
+
         if (tripLeg.MIds) {
             tripLeg.MIds.push(MiD);
         } else {
@@ -345,7 +345,7 @@ async function EndTrip(tripData) {
         } else {
             transitProvider.completedTripLegs = [tripLeg];
         }
-    
+
         if (vPassenger.completedTripLegs) {
             vPassenger.completedTripLegs.push(tripLeg);
         } else {
@@ -360,15 +360,15 @@ async function EndTrip(tripData) {
         emit(event);
 
         //update the TripLeg
-        const TripLegRegistry = await getAssetRegistry(NS +'.TripLeg');
+        const TripLegRegistry = await getAssetRegistry(NS + '.TripLeg');
         await TripLegRegistry.update(tripLeg);
 
         //update Transit Provider
-        const TransitProviderRegistry = await getParticipantRegistry(NS +'.TransitProvider');
+        const TransitProviderRegistry = await getParticipantRegistry(NS + '.TransitProvider');
         await TransitProviderRegistry.update(transitProvider);
 
         //update vPassenger
-        const vPassengerRegistry = await getAssetRegistry(NS +'.vPassenger');
+        const vPassengerRegistry = await getAssetRegistry(NS + '.vPassenger');
         await vPassengerRegistry.update(vPassenger);
     }
 }

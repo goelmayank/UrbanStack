@@ -77,7 +77,7 @@ exports.createTrip = functions.https.onRequest((req, res) => {
                 }
 
                 console.log("** ** ** ** ** createTripJson ** ** ** ** ** ** \n ", createTripJson);
-                return res.status(200).json(createTripJson);
+                // return res.status(200).json(createTripJson);
                 var options = {
                     uri: base_url + '.CreateTrip',
                     headers: {
@@ -93,7 +93,9 @@ exports.createTrip = functions.https.onRequest((req, res) => {
                 };
 
                 rp(options).then(function(response) {
-                        res.writeHead(200, { 'Cpacth': 'kjdsb' });
+                        res.writeHead(200, {
+                            'Content-Type': 'application/json'
+                        });
                         res.end(response.body);
                     })
                     .catch(function(err) {
@@ -124,18 +126,17 @@ exports.createPassenger = functions.https.onRequest((req, res) => {
         var passengerJson = {
             "$class": "org.urbanstack.Passenger",
             "balance": balance,
-            "participantKey": "string",
+            "participantKey": fName,
             "contact": {
                 "$class": "org.urbanstack.Contact",
                 "fName": fName,
                 "lname": lname,
-                "email": email,
-                "id": id
+                "email": email
             }
         }
 
-        console.log("** ** ** ** ** createTripJson ** ** ** ** ** ** \n ", createTripJson);
-        return res.status(200).json(createTripJson);
+        console.log("** ** ** ** ** createTripJson ** ** ** ** ** ** \n ", passengerJson);
+        // return res.status(200).json(passengerJson);
         var options = {
             uri: base_url + '.Passenger',
             headers: {
@@ -152,7 +153,7 @@ exports.createPassenger = functions.https.onRequest((req, res) => {
 
         rp(options).then(function(response) {
                 res.writeHead(200, {
-                    'Cpacth': 'kjdsb'
+                    'Content-Type': 'application/json'
                 });
                 res.end(response.body);
             })
