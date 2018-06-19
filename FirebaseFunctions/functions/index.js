@@ -23,7 +23,7 @@ exports.createTrip = functions.https.onRequest((req, res) => {
             destination: req_query.destination,
             mode: "transit"
         };
-        console.log('**********request req_query************\n', request)
+        console.log('**********request query************\n', request)
         console.log('finding tripLeg...')
         gMapsClient.directions(request, function(err, r) {
             console.log("inside directions callback", err, r)
@@ -36,11 +36,7 @@ exports.createTrip = functions.https.onRequest((req, res) => {
                 var json = r.json;
                 var overall_route = json.routes[0].legs[0];
                 var steps = json.routes[0].legs[0].steps;
-                console.log("start_location", overall_route.start_location || "incorrect path");
-                console.log("end_location", overall_route.end_location || "incorrect path");
-                console.log("duration", parseFloat(overall_route.duration) || "incorrect path");
-                console.log("distance", parseFloat(overall_route.distance) || "incorrect path");
-                console.log("travel_mode", overall_route.travel_mode || "incorrect path");
+
                 var route = {
                     start_location: overall_route.start_location || "incorrect path",
                     end_location: overall_route.end_location || "incorrect path",
@@ -51,11 +47,6 @@ exports.createTrip = functions.https.onRequest((req, res) => {
                 console.log("** ** ** ** ** route ** ** ** ** ** ** \n ", route);
                 var tripLegs = [];
                 for (let i = 0; i < steps.length; i++) {
-                    console.log("start_location", steps[i].start_location || "incorrect path");
-                    console.log("end_location", steps[i].end_location || "incorrect path");
-                    console.log("duration", parseFloat(steps[i].duration) || "incorrect path");
-                    console.log("distance", parseFloat(steps[i].distance) || "incorrect path");
-                    console.log("travel_mode", steps[i].travel_mode || "incorrect path");
                     var tripLeg = {
                         start_location: steps[i].start_location || "incorrect path",
                         end_location: steps[i].end_location || "incorrect path",
@@ -67,12 +58,12 @@ exports.createTrip = functions.https.onRequest((req, res) => {
                     tripLegs.push(tripLeg);
                 }
                 console.log("** ** ** ** ** tripLegs ** ** ** ** ** ** \n ", tripLegs);
-                var createTripJson = {
+                var createTripJson = JSON.stringify({
                     "$class": "org.urbanstack.CreateTrip",
                     overallRoute: route,
                     tentativeTripLegs: tripLegs,
                     passenger: 'org.urbanstack.Passenger#' + req_query.participantKey
-                }
+                });
 
                 console.log("** ** ** ** ** createTripJson ** ** ** ** ** ** \n ", createTripJson);
                 // return res.status(200).json(createTripJson);
@@ -116,9 +107,9 @@ exports.createPassenger = functions.https.onRequest((req, res) => {
         var fName = req_query.fName;
         var lname = req_query.lname;
         var email = req_query.email;
-        console.log('**********request req_query************\n', req_query)
+        console.log('**********request query************\n', req_query);
 
-        var passengerJson = {
+        var passengerJson = JSON.stringify({
             "$class": "org.urbanstack.Passenger",
             "balance": balance,
             "participantKey": fName,
@@ -128,7 +119,7 @@ exports.createPassenger = functions.https.onRequest((req, res) => {
                 "lname": lname,
                 "email": email
             }
-        }
+        });
 
         console.log("** ** ** ** ** createTripJson ** ** ** ** ** ** \n ", passengerJson);
         // return res.status(200).json(passengerJson);
