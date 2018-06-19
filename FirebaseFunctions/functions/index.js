@@ -4,9 +4,8 @@ let apiKey = 'AIzaSyD_sAu7TZJWzrmMi1SygxEG3Smdp3Ihb0A';
 var gMapsClient = require('@google/maps').createClient({
     key: apiKey
 });
-// // Create and Deploy Your First Cloud Functions
-// // https://firebase.google.com/docs/functions/write-firebase-functions
-//
+var rp = require('request-promise');
+var base_url = 'http://13.126.30.199:3000/api/org.urbanstack';
 
 /*
 Expects origin, destination and passengerKey from user
@@ -71,6 +70,7 @@ exports.createTrip = functions.https.onRequest((req, res) => {
                 }
                 console.log("** ** ** ** ** tripLegs ** ** ** ** ** ** \n ", tripLegs);
                 var createTripJson = {
+                    "$class": "org.urbanstack.CreateTrip",
                     overallRoute: route,
                     tentativeTripLegs: tripLegs,
                     passenger: 'org.urbanstack.Passenger#' + req_query.participantKey
@@ -78,8 +78,92 @@ exports.createTrip = functions.https.onRequest((req, res) => {
 
                 console.log("** ** ** ** ** createTripJson ** ** ** ** ** ** \n ", createTripJson);
                 return res.status(200).json(createTripJson);
+                var options = {
+                    uri: base_url + '.CreateTrip',
+                    headers: {
+                        'User-Agent': 'Request-Promise',
+                        'Content-Type': 'application/json',
+                    },
+                    body: createTripJson,
+                    json: true,
+                    method: 'POST',
+                    encoding: null,
+                    resolveWithFullResponse: true,
+                    rejectUnauthorized: false
+                };
+
+                rp(options).then(function(response) {
+                        res.writeHead(200, { 'Cpacth': 'kjdsb' });
+                        res.end(response.body);
+                    })
+                    .catch(function(err) {
+                        // API call failed...
+                        res.status(401).send({ error: 'Server error occured. Retry after some time' });
+
+                    });
+
             }
         });
+    } catch (e) {
+        console.log(e);
+        res.status(401).send({
+            error: 'Server error occured. Retry after some time'
+        });
+    }
+});
+
+exports.createPassenger = functions.https.onRequest((req, res) => {
+    try {
+        var req_query = req.query;
+        var balance = req_query.balance;
+        var fName = req_query.fName;
+        var lname = req_query.lname;
+        var email = req_query.email;
+        console.log('**********request req_query************\n', req_query)
+        var id = parseInt(Math.random() * 100000000).toString();
+        var passengerJson = {
+            "$class": "org.urbanstack.Passenger",
+            "balance": balance,
+            "participantKey": "string",
+            "contact": {
+                "$class": "org.urbanstack.Contact",
+                "fName": fName,
+                "lname": lname,
+                "email": email,
+                "id": id
+            }
+        }
+
+        console.log("** ** ** ** ** createTripJson ** ** ** ** ** ** \n ", createTripJson);
+        return res.status(200).json(createTripJson);
+        var options = {
+            uri: base_url + '.Passenger',
+            headers: {
+                'User-Agent': 'Request-Promise',
+                'Content-Type': 'application/json',
+            },
+            body: passengerJson,
+            json: true,
+            method: 'POST',
+            encoding: null,
+            resolveWithFullResponse: true,
+            rejectUnauthorized: false
+        };
+
+        rp(options).then(function(response) {
+                res.writeHead(200, {
+                    'Cpacth': 'kjdsb'
+                });
+                res.end(response.body);
+            })
+            .catch(function(err) {
+                // API call failed...
+                res.status(401).send({
+                    error: 'Server error occured. Retry after some time'
+                });
+
+            });
+
     } catch (e) {
         console.log(e);
         res.status(401).send({
