@@ -36,33 +36,31 @@ exports.createTrip = functions.https.onRequest((req, res) => {
                 var json = r.json;
                 var overall_route = json.routes[0].legs[0];
                 var steps = json.routes[0].legs[0].steps;
-                console.log("origin", overall_route.origin || "incorrect path");
-                console.log("destination", overall_route.destination || "incorrect path");
-                console.log("start_time", overall_route.start_time || "incorrect path");
-                console.log("end_time", overall_route.end_time || "incorrect path");
-                console.log("duration", overall_route.duration || "incorrect path");
-                console.log("distance", overall_route.distance || "incorrect path");
+                console.log("start_location", overall_route.start_location || "incorrect path");
+                console.log("end_location", overall_route.end_location || "incorrect path");
+                console.log("duration", parseFloat(overall_route.duration) || "incorrect path");
+                console.log("distance", parseFloat(overall_route.distance) || "incorrect path");
                 console.log("travel_mode", overall_route.travel_mode || "incorrect path");
                 var route = {
                     start_location: overall_route.start_location || "incorrect path",
                     end_location: overall_route.end_location || "incorrect path",
-                    duration: overall_route.duration || "incorrect path",
-                    distance: overall_route.distance || "incorrect path",
+                    duration: parseFloat(overall_route.duration) || "incorrect path",
+                    distance: parseFloat(overall_route.distance) || "incorrect path",
                     travel_mode: overall_route.travel_mode || "incorrect path",
                 };
                 console.log("** ** ** ** ** route ** ** ** ** ** ** \n ", route);
                 var tripLegs = [];
                 for (let i = 0; i < steps.length; i++) {
-                    console.log("start_location", steps[i].origin || "incorrect path");
-                    console.log("start_location", steps[i].destination || "incorrect path");
-                    console.log("duration", steps[i].duration || "incorrect path");
-                    console.log("distance", steps[i].distance || "incorrect path");
+                    console.log("start_location", steps[i].start_location || "incorrect path");
+                    console.log("end_location", steps[i].end_location || "incorrect path");
+                    console.log("duration", parseFloat(steps[i].duration) || "incorrect path");
+                    console.log("distance", parseFloat(steps[i].distance) || "incorrect path");
                     console.log("travel_mode", steps[i].travel_mode || "incorrect path");
                     var tripLeg = {
                         start_location: steps[i].start_location || "incorrect path",
                         end_location: steps[i].end_location || "incorrect path",
-                        duration: steps[i].duration || "incorrect path",
-                        distance: steps[i].distance || "incorrect path",
+                        duration: parseFloat(steps[i].duration) || "incorrect path",
+                        distance: parseFloat(steps[i].distance) || "incorrect path",
                         travel_mode: steps[i].travel_mode || "incorrect path",
                     };
                     console.log("** ** ** ** ** tripLeg ** ** ** ** ** ** \n ", tripLeg);
@@ -93,14 +91,11 @@ exports.createTrip = functions.https.onRequest((req, res) => {
                 };
 
                 rp(options).then(function(response) {
-                        res.writeHead(200, {
-                            'Content-Type': 'application/json'
-                        });
-                        res.end(response.body);
+                        res.status(200).json(response.body);
                     })
                     .catch(function(err) {
                         // API call failed...
-                        res.status(401).send({ error: 'Server error occured. Retry after some time' });
+                        res.status(401).send({ error: 'Server error occured in response promise block. Retry after some time' });
 
                     });
 
@@ -117,12 +112,12 @@ exports.createTrip = functions.https.onRequest((req, res) => {
 exports.createPassenger = functions.https.onRequest((req, res) => {
     try {
         var req_query = req.query;
-        var balance = req_query.balance;
+        var balance = parseFloat(req_query.balance);
         var fName = req_query.fName;
         var lname = req_query.lname;
         var email = req_query.email;
         console.log('**********request req_query************\n', req_query)
-        var id = parseInt(Math.random() * 100000000).toString();
+
         var passengerJson = {
             "$class": "org.urbanstack.Passenger",
             "balance": balance,
@@ -152,15 +147,12 @@ exports.createPassenger = functions.https.onRequest((req, res) => {
         };
 
         rp(options).then(function(response) {
-                res.writeHead(200, {
-                    'Content-Type': 'application/json'
-                });
-                res.end(response.body);
+                res.status(200).json(response.body);
             })
             .catch(function(err) {
                 // API call failed...
                 res.status(401).send({
-                    error: 'Server error occured. Retry after some time'
+                    error: 'Server error occured in response promise block. Retry after some time'
                 });
 
             });
