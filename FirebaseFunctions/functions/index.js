@@ -6,7 +6,7 @@ var gMapsClient = require('@google/maps').createClient({
 });
 var rp = require('request-promise');
 var base_url = 'http://13.126.30.199:3000/api/org.urbanstack';
-
+var farePerKm = 8.0;
 /*
 Expects origin, destination and passengerKey from user
 Gets the geo json data using google directions api
@@ -61,14 +61,14 @@ exports.createTrip = functions.https.onRequest((req, res) => {
                     console.log("tripLeg_distance", tripLeg_distance);
                     var tripLeg_travel_mode = steps[i].travel_mode || "Bus";
                     console.log("tripLeg_travel_mode", tripLeg_travel_mode);
-                    var transitProvider = 'org.urbanstack.TransitProvider#' + (steps[i].transit_details.line.agencies[0].name || 'DIMTS');
-                    console.log("transitProvider", transitProvider);
-                    var fare = 10.0;
-                    console.log("fare", fare);
-                    // var fare = Math.trunc(distance * farePerKm)
+                    var transitProvider = 'org.urbanstack.TransitProvider#DIMTS';
+                    console.log("transitProvider", steps[i].transit_details.line.agencies[0].name || 'org.urbanstack.TransitProvider#DIMTS');
+                    var fare = Math.trunc(distance * farePerKm)
+                    console.log("fare", fare || 10.0);
+
                     var tripLeg = JSON.stringify({
                         "$class": "org.urbanstack.TripLeg",
-                        "tripLegId": 1,
+                        "tripLegId": "56141",
                         "route": {
                             "$class": "org.urbanstack.Route",
                             "start_location": tripLeg_start_location,
@@ -76,7 +76,7 @@ exports.createTrip = functions.https.onRequest((req, res) => {
                             "duration": tripLeg_duration,
                             "distance": tripLeg_distance,
                             "status": "CREATED",
-                            "fare": fare
+                            "fare": 10.0
                         },
                         "transitMode": tripLeg_travel_mode,
                         "transitProvider": transitProvider
