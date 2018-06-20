@@ -33,7 +33,7 @@ exports.createTrip = functions.https.onRequest((req, res) => {
             } else {
                 var json = r.json;
                 console.log("Response", r.json);
-                return res.status(200).json(r.json);
+                // return res.status(200).json(r.json);
                 var overall_route_path = json.routes[0].legs[0];
                 var start_location = overall_route_path.start_location;
                 var end_location = overall_route_path.end_location;
@@ -96,7 +96,7 @@ exports.createTrip = functions.https.onRequest((req, res) => {
                 };
 
                 rp(options).then(function(response) {
-                        console.log("** ** ** ** ** response ** ** ** ** ** ** \n ", response);
+                        console.log("** ** ** ** ** Succesfully created Trip ** ** ** ** ** ** \n ", response);
                         res.status(200).json(response);
                     })
                     .catch(function(err) {

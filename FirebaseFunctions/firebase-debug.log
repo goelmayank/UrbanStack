@@ -1,18 +1,54 @@
-[debug] [2018-06-20T12:20:17.469Z] ----------------------------------------------------------------------
-[debug] [2018-06-20T12:20:17.471Z] Command:       /home/mayank/.nvm/versions/node/v8.11.3/bin/node /usr/local/bin/firebase deploy
-[debug] [2018-06-20T12:20:17.471Z] CLI Version:   3.18.4
-[debug] [2018-06-20T12:20:17.472Z] Platform:      linux
-[debug] [2018-06-20T12:20:17.472Z] Node Version:  v8.11.3
-[debug] [2018-06-20T12:20:17.472Z] Time:          Wed Jun 20 2018 17:50:17 GMT+0530 (IST)
-[debug] [2018-06-20T12:20:17.472Z] ----------------------------------------------------------------------
+[debug] [2018-06-20T12:25:20.933Z] ----------------------------------------------------------------------
+[debug] [2018-06-20T12:25:20.935Z] Command:       /home/mayank/.nvm/versions/node/v8.11.3/bin/node /usr/local/bin/firebase deploy
+[debug] [2018-06-20T12:25:20.936Z] CLI Version:   3.18.4
+[debug] [2018-06-20T12:25:20.936Z] Platform:      linux
+[debug] [2018-06-20T12:25:20.936Z] Node Version:  v8.11.3
+[debug] [2018-06-20T12:25:20.939Z] Time:          Wed Jun 20 2018 17:55:20 GMT+0530 (IST)
+[debug] [2018-06-20T12:25:20.939Z] ----------------------------------------------------------------------
 [debug] 
-[debug] [2018-06-20T12:20:17.480Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
-[debug] [2018-06-20T12:20:17.480Z] > authorizing via signed-in user
-[debug] [2018-06-20T12:20:17.482Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/projects/urbanstack-45bc4  
+[debug] [2018-06-20T12:25:20.948Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2018-06-20T12:25:20.949Z] > authorizing via signed-in user
+[debug] [2018-06-20T12:25:20.950Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/projects/urbanstack-45bc4  
   
- Wed Jun 20 2018 17:50:17 GMT+0530 (IST)
-[debug] [2018-06-20T12:20:19.328Z] <<< HTTP RESPONSE 200
-[debug] [2018-06-20T12:20:19.329Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/database/urbanstack-45bc4/tokens  
+ Wed Jun 20 2018 17:55:20 GMT+0530 (IST)
+[debug] [2018-06-20T12:25:23.607Z] <<< HTTP RESPONSE 200
+[debug] [2018-06-20T12:25:23.608Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/database/urbanstack-45bc4/tokens  
   
- Wed Jun 20 2018 17:50:19 GMT+0530 (IST)
-[debug] [2018-06-20T12:20:20.643Z] <<< HTTP RESPONSE 200
+ Wed Jun 20 2018 17:55:23 GMT+0530 (IST)
+[debug] [2018-06-20T12:25:24.919Z] <<< HTTP RESPONSE 200
+[info] 
+[info] === Deploying to 'urbanstack-45bc4'...
+[info] 
+[info] i  deploying functions
+[debug] [2018-06-20T12:25:28.818Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "Cloud Functions for Firebase",
+  "scripts": {
+    "serve": "firebase serve --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "dependencies": {
+    "@google/maps": "0.4.3",
+    "firebase-admin": "^5.12.1",
+    "firebase-functions": "^1.0.4",
+    "request": "^2.82.0",
+    "request-promise": "^4.2.2"
+  },
+  "private": true
+}
+[info] i  functions: ensuring necessary APIs are enabled...
+[debug] [2018-06-20T12:25:28.820Z] >>> HTTP REQUEST GET https://servicemanagement.googleapis.com/v1/services/cloudfunctions.googleapis.com/projectSettings/urbanstack-45bc4?view=CONSUMER_VIEW  
+  
+ Wed Jun 20 2018 17:55:28 GMT+0530 (IST)
+[debug] [2018-06-20T12:25:28.820Z] >>> HTTP REQUEST GET https://servicemanagement.googleapis.com/v1/services/runtimeconfig.googleapis.com/projectSettings/urbanstack-45bc4?view=CONSUMER_VIEW  
+  
+ Wed Jun 20 2018 17:55:28 GMT+0530 (IST)
+[debug] [2018-06-20T12:25:31.111Z] <<< HTTP RESPONSE 200
+[debug] [2018-06-20T12:25:31.452Z] <<< HTTP RESPONSE 200
+[info] ✔  functions: all necessary APIs are enabled
+[debug] [2018-06-20T12:25:31.456Z] >>> HTTP REQUEST GET https://cloudresourcemanager.googleapis.com/v1/projects/urbanstack-45bc4  
+  
+ Wed Jun 20 2018 17:55:31 GMT+0530 (IST)
