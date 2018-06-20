@@ -62,7 +62,8 @@ exports.createTrip = functions.https.onRequest((req, res) => {
                     var tripLeg_travel_mode = steps[i].travel_mode || "Bus";
                     console.log("tripLeg_travel_mode", tripLeg_travel_mode);
                     var transitProvider = 'org.urbanstack.TransitProvider#DIMTS';
-                    console.log("transitProvider", steps[i].transit_details.line.agencies[0].name || 'org.urbanstack.TransitProvider#DIMTS');
+                    console.log("transitProvider", 'org.urbanstack.TransitProvider#DIMTS');
+                    // steps[i].transit_details.line.agencies[0].name
                     var fare = Math.trunc(distance * farePerKm)
                     console.log("fare", fare || 10.0);
 
