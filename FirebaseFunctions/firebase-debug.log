@@ -1,0 +1,18 @@
+[debug] [2018-06-20T12:20:17.469Z] ----------------------------------------------------------------------
+[debug] [2018-06-20T12:20:17.471Z] Command:       /home/mayank/.nvm/versions/node/v8.11.3/bin/node /usr/local/bin/firebase deploy
+[debug] [2018-06-20T12:20:17.471Z] CLI Version:   3.18.4
+[debug] [2018-06-20T12:20:17.472Z] Platform:      linux
+[debug] [2018-06-20T12:20:17.472Z] Node Version:  v8.11.3
+[debug] [2018-06-20T12:20:17.472Z] Time:          Wed Jun 20 2018 17:50:17 GMT+0530 (IST)
+[debug] [2018-06-20T12:20:17.472Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2018-06-20T12:20:17.480Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2018-06-20T12:20:17.480Z] > authorizing via signed-in user
+[debug] [2018-06-20T12:20:17.482Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/projects/urbanstack-45bc4  
+  
+ Wed Jun 20 2018 17:50:17 GMT+0530 (IST)
+[debug] [2018-06-20T12:20:19.328Z] <<< HTTP RESPONSE 200
+[debug] [2018-06-20T12:20:19.329Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/database/urbanstack-45bc4/tokens  
+  
+ Wed Jun 20 2018 17:50:19 GMT+0530 (IST)
+[debug] [2018-06-20T12:20:20.643Z] <<< HTTP RESPONSE 200

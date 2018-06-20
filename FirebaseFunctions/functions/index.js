@@ -37,26 +37,27 @@ exports.createTrip = functions.https.onRequest((req, res) => {
                 var overall_route_path = json.routes[0].legs[0];
                 var start_location = overall_route_path.start_location;
                 var end_location = overall_route_path.end_location;
-                var duration = parseFloat(overall_route_path.duration);
-                var distance = parseFloat(overall_route_path.distance);
+                var duration = parseFloat(overall_route_path.duration) || 0.0;
+                var distance = parseFloat(overall_route_path.distance) || 0.0;
                 var overallRoute = JSON.stringify({
                     "$class": "org.urbanstack.Route",
                     "start_location": start_location,
                     "end_location": end_location,
-                    "duration": duration || 0,
-                    "distance": distance || 0,
+                    "duration": duration,
+                    "distance": distance,
                     "status": "CREATED"
                 });
                 console.log("** ** ** ** ** route ** ** ** ** ** ** \n ", overallRoute);
                 var tentativeTripLegs = [];
                 for (let i = 0; i < steps.length; i++) {
-                    var tripLeg_start_location = steps[i].start_location || "incorrect path";
-                    var tripLeg_end_location = steps[i].end_location || "incorrect path";
+                    var tripLeg_start_location = steps[i].start_location;
+                    var tripLeg_end_location = steps[i].end_location;
                     var tripLeg_duration = parseFloat(steps[i].duration) || 0.0;
                     var tripLeg_distance = parseFloat(steps[i].distance) || 0.0;
                     var tripLeg_travel_mode = steps[i].travel_mode || "Bus";
-                    var transitProvider = steps[i].transit_details.line.agencies[0].name;
-                    var fare = Math.trunc(distance * farePerKm) || 0.0;
+                    var transitProvider = 'org.urbanstack.TransitProvider#' + (steps[i].transit_details.line.agencies[0].name || 'DIMTS');
+                    var fare = 10.0;
+                    // var fare = Math.trunc(distance * farePerKm)
                     var tripLeg = JSON.stringify({
                         "$class": "org.urbanstack.TripLeg",
                         "tripLegId": 1,
