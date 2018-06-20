@@ -70,8 +70,7 @@ exports.createTrip = functions.https.onRequest((req, res) => {
                 var options = {
                     uri: base_url + '.CreateTrip',
                     headers: {
-                        'User-Agent': 'Request-Promise',
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/json'
                     },
                     body: createTripJson,
                     json: true,
@@ -121,13 +120,12 @@ exports.createPassenger = functions.https.onRequest((req, res) => {
             }
         });
 
-        console.log("** ** ** ** ** createTripJson ** ** ** ** ** ** \n ", passengerJson);
+        console.log("** ** ** ** ** passengerJson ** ** ** ** ** ** \n ", passengerJson);
         // return res.status(200).json(passengerJson);
         var options = {
             uri: base_url + '.Passenger',
             headers: {
-                'User-Agent': 'Request-Promise',
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
             body: passengerJson,
             json: true,
@@ -155,3 +153,62 @@ exports.createPassenger = functions.https.onRequest((req, res) => {
         });
     }
 });
+
+// exports.createTransitProvider = functions.https.onRequest((req, res) => {
+//     try {
+//         var req_query = req.query;
+//         var balance = parseFloat(req_query.balance);
+//         var fName = req_query.fName;
+//         var lname = req_query.lname;
+//         var email = req_query.email;
+//         var transitMode = req_query.transitMode;
+//         var paymentPreference = req_query.paymentPreference;
+//         console.log('**********request query************\n', req_query);
+
+//         var passengerJson = JSON.stringify({
+//             "$class": "org.urbanstack.TransitProvider",
+//             "balance": balance,
+//             "participantKey": fName,
+//             "contact": {
+//                 "$class": "org.urbanstack.Contact",
+//                 "fName": fName,
+//                 "lname": lname,
+//                 "email": email
+//             },
+//             "TransitMode": transitMode,
+//             "PaymentPreference": paymentPreference
+//         });
+
+//         console.log("** ** ** ** ** TransitProviderJson ** ** ** ** ** ** \n ", TransitProviderJson);
+//         // return res.status(200).json(TransitProviderJson);
+//         var options = {
+//             uri: base_url + '.TransitProvider',
+//             headers: {
+//                 'Content-Type': 'application/json',
+//             },
+//             body: TransitProviderJson,
+//             json: true,
+//             method: 'GET',
+//             encoding: null,
+//             resolveWithFullResponse: true,
+//             rejectUnauthorized: false
+//         };
+
+//         rp(options).then(function(response) {
+//                  res.status(200).json(response.body);
+//             })
+//             .catch(function(err) {
+//                 // API call failed...
+//                 res.status(401).send({
+//                     error: 'Server error occured in response promise block. Retry after some time'
+//                 });
+
+//             });
+
+//     } catch (e) {
+//         console.log(e);
+//         res.status(401).send({
+//             error: 'Server error occured. Retry after some time'
+//         });
+//     }
+// });
