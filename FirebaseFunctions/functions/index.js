@@ -31,61 +31,76 @@ exports.createTrip = functions.https.onRequest((req, res) => {
                 console.log("ERRRRRRRR", err);
                 res.status(401).send(err.toString());
             } else {
-                console.log("Response", r.json);
-                // return res.status(200).json(r.json);
                 var json = r.json;
-                var overall_route = json.routes[0].legs[0];
-                var steps = json.routes[0].legs[0].steps;
-
-                var route = {
-                    start_location: overall_route.start_location || "incorrect path",
-                    end_location: overall_route.end_location || "incorrect path",
-                    duration: parseFloat(overall_route.duration) || "incorrect path",
-                    distance: parseFloat(overall_route.distance) || "incorrect path",
-                    travel_mode: overall_route.travel_mode || "incorrect path",
-                };
-                console.log("** ** ** ** ** route ** ** ** ** ** ** \n ", route);
-                var tripLegs = [];
+                console.log("Response", r.json);
+                return res.status(200).json(r.json);
+                var overall_route_path = json.routes[0].legs[0];
+                var start_location = overall_route_path.start_location;
+                var end_location = overall_route_path.end_location;
+                var duration = parseFloat(overall_route_path.duration);
+                var distance = parseFloat(overall_route_path.distance);
+                var overallRoute = JSON.stringify({
+                    "$class": "org.urbanstack.Route",
+                    "start_location": start_location,
+                    "end_location": end_location,
+                    "duration": duration || 0,
+                    "distance": distance || 0,
+                    "status": "CREATED"
+                });
+                console.log("** ** ** ** ** route ** ** ** ** ** ** \n ", overallRoute);
+                var tentativeTripLegs = [];
                 for (let i = 0; i < steps.length; i++) {
-                    var tripLeg = {
-                        start_location: steps[i].start_location || "incorrect path",
-                        end_location: steps[i].end_location || "incorrect path",
-                        duration: parseFloat(steps[i].duration) || "incorrect path",
-                        distance: parseFloat(steps[i].distance) || "incorrect path",
-                        travel_mode: steps[i].travel_mode || "incorrect path",
-                    };
+                    var tripLeg_start_location = steps[i].start_location || "incorrect path";
+                    var tripLeg_end_location = steps[i].end_location || "incorrect path";
+                    var tripLeg_duration = parseFloat(steps[i].duration) || 0.0;
+                    var tripLeg_distance = parseFloat(steps[i].distance) || 0.0;
+                    var tripLeg_travel_mode = steps[i].travel_mode || "Bus";
+                    var transitProvider = steps[i].transit_details.line.agencies[0].name;
+                    var fare = Math.trunc(distance * farePerKm) || 0.0;
+                    var tripLeg = JSON.stringify({
+                        "$class": "org.urbanstack.TripLeg",
+                        "tripLegId": 1,
+                        "route": {
+                            "$class": "org.urbanstack.Route",
+                            "start_location": tripLeg_start_location,
+                            "end_location": tripLeg_end_location,
+                            "duration": tripLeg_duration,
+                            "distance": tripLeg_distance,
+                            "status": "CREATED",
+                            "fare": fare
+                        },
+                        "transitMode": tripLeg_travel_mode,
+                        "transitProvider": transitProvider
+                    });
                     console.log("** ** ** ** ** tripLeg ** ** ** ** ** ** \n ", tripLeg);
-                    tripLegs.push(tripLeg);
+                    tentativeTripLegs.push(tripLeg);
                 }
-                console.log("** ** ** ** ** tripLegs ** ** ** ** ** ** \n ", tripLegs);
+                console.log("** ** ** ** ** tripLegs ** ** ** ** ** ** \n ", tentativeTripLegs);
                 var createTripJson = JSON.stringify({
                     "$class": "org.urbanstack.CreateTrip",
-                    overallRoute: route,
-                    tentativeTripLegs: tripLegs,
-                    passenger: 'org.urbanstack.Passenger#' + req_query.participantKey
+                    "overallRoute": overallRoute,
+                    "tentativeTripLegs": tentativeTripLegs,
+                    "passenger": 'org.urbanstack.Passenger#' + req_query.participantKey
                 });
 
                 console.log("** ** ** ** ** createTripJson ** ** ** ** ** ** \n ", createTripJson);
                 // return res.status(200).json(createTripJson);
                 var options = {
+                    method: 'POST',
                     uri: base_url + '.CreateTrip',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: createTripJson,
-                    json: true,
-                    method: 'POST',
-                    encoding: null,
-                    resolveWithFullResponse: true,
-                    rejectUnauthorized: false
+                    body: createTripJson
                 };
 
                 rp(options).then(function(response) {
-                        res.status(200).json(response.body);
+                        console.log("** ** ** ** ** response ** ** ** ** ** ** \n ", response);
+                        res.status(200).json(response);
                     })
                     .catch(function(err) {
                         // API call failed...
-                        res.status(401).send({ error: 'Server error occured in response promise block. Retry after some time' });
+                        res.status(401).send(err.toString());
 
                     });
 
@@ -93,9 +108,7 @@ exports.createTrip = functions.https.onRequest((req, res) => {
         });
     } catch (e) {
         console.log(e);
-        res.status(401).send({
-            error: 'Server error occured. Retry after some time'
-        });
+        res.status(401).send(e.toString());
     }
 });
 
@@ -123,92 +136,81 @@ exports.createPassenger = functions.https.onRequest((req, res) => {
         console.log("** ** ** ** ** passengerJson ** ** ** ** ** ** \n ", passengerJson);
         // return res.status(200).json(passengerJson);
         var options = {
+            method: 'POST',
             uri: base_url + '.Passenger',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: passengerJson,
-            json: true,
-            method: 'POST',
-            encoding: null,
-            resolveWithFullResponse: true,
-            rejectUnauthorized: false
+            body: passengerJson
         };
 
         rp(options).then(function(response) {
-                res.status(200).json(response.body);
+                console.log("** ** ** ** ** response ** ** ** ** ** ** \n ", response);
+                res.status(200).json(response);
             })
             .catch(function(err) {
                 // API call failed...
-                res.status(401).send({
-                    error: 'Server error occured in response promise block. Retry after some time'
-                });
+                res.status(401).send(err.toString());
 
             });
 
     } catch (e) {
         console.log(e);
         res.status(401).send({
-            error: 'Server error occured. Retry after some time'
+            error: e.toString()
         });
     }
 });
 
-// exports.createTransitProvider = functions.https.onRequest((req, res) => {
-//     try {
-//         var req_query = req.query;
-//         var balance = parseFloat(req_query.balance);
-//         var fName = req_query.fName;
-//         var lname = req_query.lname;
-//         var email = req_query.email;
-//         var transitMode = req_query.transitMode;
-//         var paymentPreference = req_query.paymentPreference;
-//         console.log('**********request query************\n', req_query);
+exports.createTransitProvider = functions.https.onRequest((req, res) => {
+    try {
+        var req_query = req.query;
+        var balance = parseFloat(req_query.balance);
+        var fName = req_query.fName;
+        var lname = req_query.lname;
+        var email = req_query.email;
+        var transitMode = req_query.transitMode;
+        var paymentPreference = req_query.paymentPreference;
+        console.log('**********request query************\n', req_query);
 
-//         var passengerJson = JSON.stringify({
-//             "$class": "org.urbanstack.TransitProvider",
-//             "balance": balance,
-//             "participantKey": fName,
-//             "contact": {
-//                 "$class": "org.urbanstack.Contact",
-//                 "fName": fName,
-//                 "lname": lname,
-//                 "email": email
-//             },
-//             "TransitMode": transitMode,
-//             "PaymentPreference": paymentPreference
-//         });
+        var TransitProviderJson = JSON.stringify({
+            "$class": "org.urbanstack.TransitProvider",
+            "balance": balance,
+            "participantKey": fName,
+            "contact": {
+                "$class": "org.urbanstack.Contact",
+                "fName": fName,
+                "lname": lname,
+                "email": email
+            },
+            "transitMode": transitMode,
+            "paymentPreference": paymentPreference
+        });
 
-//         console.log("** ** ** ** ** TransitProviderJson ** ** ** ** ** ** \n ", TransitProviderJson);
-//         // return res.status(200).json(TransitProviderJson);
-//         var options = {
-//             uri: base_url + '.TransitProvider',
-//             headers: {
-//                 'Content-Type': 'application/json',
-//             },
-//             body: TransitProviderJson,
-//             json: true,
-//             method: 'GET',
-//             encoding: null,
-//             resolveWithFullResponse: true,
-//             rejectUnauthorized: false
-//         };
+        console.log("** ** ** ** ** TransitProviderJson ** ** ** ** ** ** \n ", TransitProviderJson);
+        // return res.status(200).json(TransitProviderJson);
+        var options = {
+            method: 'POST',
+            uri: base_url + '.TransitProvider',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: TransitProviderJson
+        };
 
-//         rp(options).then(function(response) {
-//                  res.status(200).json(response.body);
-//             })
-//             .catch(function(err) {
-//                 // API call failed...
-//                 res.status(401).send({
-//                     error: 'Server error occured in response promise block. Retry after some time'
-//                 });
+        rp(options).then(function(response) {
+                res.status(200).json(response);
+            })
+            .catch(function(err) {
+                // API call failed...
+                res.status(401).send('Server error occured in response promise block. Retry after some time');
 
-//             });
+            });
 
-//     } catch (e) {
-//         console.log(e);
-//         res.status(401).send({
-//             error: 'Server error occured. Retry after some time'
-//         });
-//     }
-// });
+    } catch (e) {
+        console.log(e);
+        res.status(401).send(
+            'Server error occured. Retry after some time'
+        );
+    }
+});

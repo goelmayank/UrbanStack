@@ -85,6 +85,7 @@ participant TransitProvider extends User {
   o Double balance
   o TransitMode       transitMode
   o PaymentPreference paymentPreference
+  o Double farePerKm
   --> TripLeg[]       tentativeTripLegs optional
   --> TripLeg[]       confirmedTripLegs optional
   --> TripLeg[]       completedTripLegs optional
