@@ -47,16 +47,24 @@ exports.createTrip = functions.https.onRequest((req, res) => {
                     "distance": distance,
                     "status": "CREATED"
                 });
-                console.log("** ** ** ** ** route ** ** ** ** ** ** \n ", overallRoute);
+                console.log("** ** ** ** ** overallRoute ** ** ** ** ** ** \n ", overallRoute);
                 var tentativeTripLegs = [];
+                var steps = json.routes[0].legs[0].steps;
                 for (let i = 0; i < steps.length; i++) {
                     var tripLeg_start_location = steps[i].start_location;
+                    console.log("tripLeg_start_location", tripLeg_start_location);
                     var tripLeg_end_location = steps[i].end_location;
+                    console.log("tripLeg_end_location", tripLeg_end_location);
                     var tripLeg_duration = parseFloat(steps[i].duration) || 0.0;
+                    console.log("tripLeg_duration", tripLeg_duration);
                     var tripLeg_distance = parseFloat(steps[i].distance) || 0.0;
+                    console.log("tripLeg_distance", tripLeg_distance);
                     var tripLeg_travel_mode = steps[i].travel_mode || "Bus";
+                    console.log("tripLeg_travel_mode", tripLeg_travel_mode);
                     var transitProvider = 'org.urbanstack.TransitProvider#' + (steps[i].transit_details.line.agencies[0].name || 'DIMTS');
+                    console.log("transitProvider", transitProvider);
                     var fare = 10.0;
+                    console.log("fare", fare);
                     // var fare = Math.trunc(distance * farePerKm)
                     var tripLeg = JSON.stringify({
                         "$class": "org.urbanstack.TripLeg",
